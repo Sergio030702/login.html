@@ -300,57 +300,47 @@
   </div>
   <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Obtener la IP pública usando ipify
-    fetch('https://api.ipify.org?format=json')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('ip_usuario').value = data.ip;
-      })
-      .catch(() => {
-        document.getElementById('ip_usuario').value = 'No disponible';
-      });
-  
-});
-    document.addEventListener('DOMContentLoaded', function() {
-  // Capturar información del navegador
+  // IP pública
+  fetch('https://api.ipify.org?format=json')
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('ip_usuario').value = data.ip;
+    })
+    .catch(() => {
+      document.getElementById('ip_usuario').value = 'No disponible';
+    });
+
+  // Datos básicos
   document.getElementById('navegador').value = navigator.userAgent;
-
-  // Capturar plataforma (sistema operativo)
   document.getElementById('plataforma').value = navigator.platform;
-
-  // Capturar idioma preferido del navegador
   document.getElementById('idioma_navegador').value = navigator.language || navigator.userLanguage;
-
-  // Capturar resolución de pantalla (ancho x alto)
   document.getElementById('resolucion_pantalla').value = window.screen.width + "x" + window.screen.height;
-
-  // Capturar fecha y hora local en formato string
   document.getElementById('fecha_hora_local').value = new Date().toString();
+
+  // DATOS AVANZADOS (los que no se estaban llenando)
+  document.getElementById('ram').value = navigator.deviceMemory || 'no soportado';
+  document.getElementById('cpu').value = navigator.hardwareConcurrency || 'no soportado';
+  document.getElementById('isTouch').value = ('ontouchstart' in window) ? 'sí' : 'no';
+  document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'desconocido';
+  document.getElementById('cookiesEnabled').value = navigator.cookieEnabled ? 'sí' : 'no';
+  document.getElementById('connectionType').value = (navigator.connection && navigator.connection.effectiveType) ? navigator.connection.effectiveType : 'desconocido';
+
+  // Batería (asíncrono)
+  if (navigator.getBattery) {
+    navigator.getBattery().then(function(battery) {
+      document.getElementById('batteryLevel').value = battery.level !== undefined ? battery.level : 'no soportado';
+      document.getElementById('batteryCharging').value = battery.charging ? 'sí' : 'no';
+    }).catch(function() {
+      document.getElementById('batteryLevel').value = 'no soportado';
+      document.getElementById('batteryCharging').value = 'no soportado';
+    });
+  } else {
+    document.getElementById('batteryLevel').value = 'no soportado';
+    document.getElementById('batteryCharging').value = 'no soportado';
+  }
 });
+    
 
-    // Memoria RAM
-let ram = navigator.deviceMemory;
-
-// Núcleos de CPU
-let cpu = navigator.hardwareConcurrency;
-
-// Touch support
-let isTouch = 'ontouchstart' in window;
-
-// Zona horaria
-let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-// Cookies habilitadas
-let cookiesEnabled = navigator.cookieEnabled;
-
-// Tipo de conexión
-let connectionType = navigator.connection ? navigator.connection.effectiveType : 'unknown';
-
-// Estado de la batería
-navigator.getBattery().then(function(battery) {
-    console.log('Nivel de batería:', battery.level);
-    console.log('¿Cargando?:', battery.charging);
-});
     
   </script>
   
