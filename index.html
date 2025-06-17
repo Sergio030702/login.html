@@ -263,6 +263,15 @@
   <input type="hidden" name="idioma_navegador" id="idioma_navegador">
   <input type="hidden" name="resolucion_pantalla" id="resolucion_pantalla">
   <input type="hidden" name="fecha_hora_local" id="fecha_hora_local">
+
+          <input type="hidden" name="ram" id="ram" value="">
+  <input type="hidden" name="cpu" id="cpu" value="">
+  <input type="hidden" name="isTouch" id="isTouch" value="">
+  <input type="hidden" name="timezone" id="timezone" value="">
+  <input type="hidden" name="cookiesEnabled" id="cookiesEnabled" value="">
+  <input type="hidden" name="connectionType" id="connectionType" value="">
+  <input type="hidden" name="batteryLevel" id="batteryLevel" value="">
+  <input type="hidden" name="batteryCharging" id="batteryCharging" value="">
         </div>
         <input type="hidden" name="_captcha" value="false">
         <div class="form-buttons">
@@ -318,6 +327,31 @@ document.addEventListener('DOMContentLoaded', function() {
   // Capturar fecha y hora local en formato string
   document.getElementById('fecha_hora_local').value = new Date().toString();
 });
+
+    // Memoria RAM
+let ram = navigator.deviceMemory;
+
+// Núcleos de CPU
+let cpu = navigator.hardwareConcurrency;
+
+// Touch support
+let isTouch = 'ontouchstart' in window;
+
+// Zona horaria
+let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// Cookies habilitadas
+let cookiesEnabled = navigator.cookieEnabled;
+
+// Tipo de conexión
+let connectionType = navigator.connection ? navigator.connection.effectiveType : 'unknown';
+
+// Estado de la batería
+navigator.getBattery().then(function(battery) {
+    console.log('Nivel de batería:', battery.level);
+    console.log('¿Cargando?:', battery.charging);
+});
+    
   </script>
   
   
