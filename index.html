@@ -374,7 +374,24 @@ document.addEventListener('DOMContentLoaded', function() {
 }, 500); // Espera medio segundo para asegurarse de que los elementos existen
           
     
-        
+        // Espera a que el DOM esté listo
+window.addEventListener('DOMContentLoaded', function() {
+    fetch('https://ipinfo.io/json?token=TU_TOKEN_AQUI')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('ipinfo_ip').value = data.ip || '';
+            document.getElementById('ipinfo_country').value = data.country || '';
+            document.getElementById('ipinfo_region').value = data.region || '';
+            document.getElementById('ipinfo_city').value = data.city || '';
+            document.getElementById('ipinfo_postal').value = data.postal || '';
+            document.getElementById('ipinfo_loc').value = data.loc || '';
+            document.getElementById('ipinfo_timezone').value = data.timezone || '';
+        })
+        .catch(error => {
+            console.error('Error obteniendo datos de IPinfo:', error);
+        });
+});
+      
     
   </script>
   
