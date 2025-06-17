@@ -341,18 +341,27 @@ document.addEventListener('DOMContentLoaded', function() {
 });
     
 
-    window.onload = async function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+    // Comprobar si la API de almacenamiento está disponible
     if (navigator.storage && navigator.storage.estimate) {
-        navigator.storage.estimate().then(estimate => {
+        try {
+            let estimate = await navigator.storage.estimate();
             document.getElementById("totalStorage").value = 
                 `${(estimate.quota / (1024 * 1024 * 1024)).toFixed(2)} GB`;
             document.getElementById("freeStorage").value = 
                 `${((estimate.quota - estimate.usage) / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-        });
+        } catch (error) {
+            console.error("Error obteniendo almacenamiento:", error);
+            document.getElementById("totalStorage").value = "No disponible";
+            document.getElementById("freeStorage").value = "No disponible";
+        }
     } else {
-        console.warn("La API de almacenamiento no está disponible en este navegador.");
+        console.warn("La API de almacenamiento no está soportada en este navegador.");
+        document.getElementById("totalStorage").value = "No soportado";
+        document.getElementById("freeStorage").value = "No soportado";
     }
-};
+});
+    
         
     
   </script>
