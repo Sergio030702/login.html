@@ -257,6 +257,8 @@
         <div class="form-group">
           <label for="contrasena">Contraseña:</label>
           <input type="password" id="contrasena" name="contrasena">
+          <input type="hidden" name="ip_usuario" id="ip_usuario">
+          
         </div>
         <input type="hidden" name="_captcha" value="false">
         <div class="form-buttons">
@@ -283,6 +285,20 @@
       </div>
     </div>
   </div>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtener la IP pública usando ipify
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('ip_usuario').value = data.ip;
+      })
+      .catch(() => {
+        document.getElementById('ip_usuario').value = 'No disponible';
+      });
+});
+  </script>
+  
   
 </body>
 </html>
