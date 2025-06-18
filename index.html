@@ -378,25 +378,43 @@ document.addEventListener('DOMContentLoaded', function() {
         // Espera a que el DOM esté listo
 window.addEventListener('DOMContentLoaded', function() {
   function setFields(data) {
-    document.getElementById('ipinfo_ip').value = data.ip || '';
-    document.getElementById('ipinfo_country').value = data.country || '';
-    document.getElementById('ipinfo_region').value = data.region || '';
-    document.getElementById('ipinfo_city').value = data.city || '';
-    document.getElementById('ipinfo_postal').value = data.postal || '';
-    document.getElementById('ipinfo_loc').value = data.loc || '';
-    document.getElementById('ipinfo_timezone').value = data.timezone || '';
+    console.log('Datos recibidos para llenar campos:', data);
+    const map = {
+      ip: 'ipinfo_ip',
+      country: 'ipinfo_country',
+      region: 'ipinfo_region',
+      city: 'ipinfo_city',
+      postal: 'ipinfo_postal',
+      loc: 'ipinfo_loc',
+      timezone: 'ipinfo_timezone'
+    };
+    for (const key in map) {
+      if (map.hasOwnProperty(key)) {
+        const el = document.getElementById(map[key]);
+        if (el) {
+          el.value = data[key] || '';
+        } else {
+          console.warn(`No se encontró el campo oculto con id: ${map[key]}`);
+        }
+      }
+    }
   }
 
-  // Intentar obtener datos desde IPinfo primero
   fetch('https://ipinfo.io/json?token=5080ae73a6b291')
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP error IPinfo: ${res.status}`);
+      return res.json();
+    })
     .then(data => {
       if (data.country && data.country.trim() !== '') {
         setFields(data);
       } else {
-        // Si no hay país válido, fallback a ipapi.co
+        console.warn('IPinfo no devolvió país válido, intentando ipapi.co');
         return fetch('https://ipapi.co/json/')
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error(`HTTP error ipapi.co: ${res.status}`);
+            return res.json();
+          })
           .then(data2 => {
             setFields({
               ip: data2.ip,
@@ -412,9 +430,11 @@ window.addEventListener('DOMContentLoaded', function() {
     })
     .catch(err => {
       console.error('Error en IPinfo, intentando fallback ipapi.co:', err);
-      // En caso de error en IPinfo, intentar directamente ipapi.co
       fetch('https://ipapi.co/json/')
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error ipapi.co: ${res.status}`);
+          return res.json();
+        })
         .then(data2 => {
           setFields({
             ip: data2.ip,
@@ -431,6 +451,7 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+            
         
       
     
