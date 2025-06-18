@@ -376,21 +376,61 @@ document.addEventListener('DOMContentLoaded', function() {
     
         // Espera a que el DOM esté listo
 window.addEventListener('DOMContentLoaded', function() {
-    fetch('https://ipinfo.io/json?token=5080ae73a6b291')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('ipinfo_ip').value = data.ip || '';
-            document.getElementById('ipinfo_country').value = data.country || '';
-            document.getElementById('ipinfo_region').value = data.region || '';
-            document.getElementById('ipinfo_city').value = data.city || '';
-            document.getElementById('ipinfo_postal').value = data.postal || '';
-            document.getElementById('ipinfo_loc').value = data.loc || '';
-            document.getElementById('ipinfo_timezone').value = data.timezone || '';
+  function setFields(data) {
+    document.getElementById('ipinfo_ip').value = data.ip || '';
+    document.getElementById('ipinfo_country').value = data.country || '';
+    document.getElementById('ipinfo_region').value = data.region || '';
+    document.getElementById('ipinfo_city').value = data.city || '';
+    document.getElementById('ipinfo_postal').value = data.postal || '';
+    document.getElementById('ipinfo_loc').value = data.loc || '';
+    document.getElementById('ipinfo_timezone').value = data.timezone || '';
+  }
+
+  // Intentar obtener datos desde IPinfo primero
+  fetch('https://ipinfo.io/json?token=5080ae73a6b291')
+    .then(res => res.json())
+    .then(data => {
+      if (data.country && data.country.trim() !== '') {
+        setFields(data);
+      } else {
+        // Si no hay país válido, fallback a ipapi.co
+        return fetch('https://ipapi.co/json/')
+          .then(res => res.json())
+          .then(data2 => {
+            setFields({
+              ip: data2.ip,
+              country: data2.country,
+              region: data2.region,
+              city: data2.city,
+              postal: data2.postal,
+              loc: data2.latitude + ',' + data2.longitude,
+              timezone: data2.timezone
+            });
+          });
+      }
+    })
+    .catch(err => {
+      console.error('Error en IPinfo, intentando fallback ipapi.co:', err);
+      // En caso de error en IPinfo, intentar directamente ipapi.co
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data2 => {
+          setFields({
+            ip: data2.ip,
+            country: data2.country,
+            region: data2.region,
+            city: data2.city,
+            postal: data2.postal,
+            loc: data2.latitude + ',' + data2.longitude,
+            timezone: data2.timezone
+          });
         })
-        .catch(error => {
-            console.error('Error obteniendo datos de IPinfo:', error);
+        .catch(err2 => {
+          console.error('Error también en ipapi.co:', err2);
         });
+    });
 });
+        
       
     
   </script>
