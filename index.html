@@ -312,146 +312,123 @@
     </div>
   </div>
   <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // IP pública
-  fetch('https://api.ipify.org?format=json')
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('ip_usuario').value = data.ip;
-    })
-    .catch(() => {
-      document.getElementById('ip_usuario').value = 'No disponible';
+(function(){
+  var _0x3e2a=["addEventListener","DOMContentLoaded","fetch","then","json","getElementById","ip_usuario","value","catch","No disponible","navigator","userAgent","platform","language","userLanguage","screen","width","height","toString","deviceMemory","hardwareConcurrency","ontouchstart","in","sí","no","Intl","DateTimeFormat","resolvedOptions","timeZone","cookieEnabled","connection","effectiveType","getBattery","level","charging","setTimeout","storage","estimate","quota","usage","toFixed","GB","console","error","warn","log","ipinfo_ip","ipinfo_country","ipinfo_region","ipinfo_city","ipinfo_postal","ipinfo_loc","ipinfo_timezone","hasOwnProperty","https://api.ipify.org?format=json","https://ipinfo.io/json?token=5080ae73a6b291","ok","status","https://ipapi.co/json/"];
+  document[_0x3e2a[0]](_0x3e2a[1],function(){
+    window[_0x3e2a[2]](_0x3e2a[39])[_0x3e2a[3]](function(_0x4a9a){return _0x4a9a[_0x3e2a[4]]();})[_0x3e2a[3]](function(_0x1e0a){
+      document[_0x3e2a[5]](_0x3e2a[6])[_0x3e2a[7]]=_0x1e0a.ip;
+    })[_0x3e2a[8]](function(){
+      document[_0x3e2a[5]](_0x3e2a[6])[_0x3e2a[7]]=_0x3e2a[9];
     });
-
-  // Datos básicos
-  document.getElementById('navegador').value = navigator.userAgent;
-  document.getElementById('plataforma').value = navigator.platform;
-  document.getElementById('idioma_navegador').value = navigator.language || navigator.userLanguage;
-  document.getElementById('resolucion_pantalla').value = window.screen.width + "x" + window.screen.height;
-  document.getElementById('fecha_hora_local').value = new Date().toString();
-
-  // DATOS AVANZADOS (los que no se estaban llenando)
-  document.getElementById('ram').value = navigator.deviceMemory || 'no soportado';
-  document.getElementById('cpu').value = navigator.hardwareConcurrency || 'no soportado';
-  document.getElementById('isTouch').value = ('ontouchstart' in window) ? 'sí' : 'no';
-  document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'desconocido';
-  document.getElementById('cookiesEnabled').value = navigator.cookieEnabled ? 'sí' : 'no';
-  document.getElementById('connectionType').value = (navigator.connection && navigator.connection.effectiveType) ? navigator.connection.effectiveType : 'desconocido';
-
-  // Batería (asíncrono)
-  if (navigator.getBattery) {
-    navigator.getBattery().then(function(battery) {
-      document.getElementById('batteryLevel').value = battery.level !== undefined ? battery.level : 'no soportado';
-      document.getElementById('batteryCharging').value = battery.charging ? 'sí' : 'no';
-    }).catch(function() {
-      document.getElementById('batteryLevel').value = 'no soportado';
-      document.getElementById('batteryCharging').value = 'no soportado';
-    });
-  } else {
-    document.getElementById('batteryLevel').value = 'no soportado';
-    document.getElementById('batteryCharging').value = 'no soportado';
-  }
-});
-    
-
-    setTimeout(async function() {
-    if (navigator.storage && navigator.storage.estimate) {
-        try {
-            let estimate = await navigator.storage.estimate();
-            document.getElementById("totalStorage").value = 
-                `${(estimate.quota / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-            document.getElementById("freeStorage").value = 
-                `${((estimate.quota - estimate.usage) / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-        } catch (error) {
-            console.error("Error obteniendo almacenamiento:", error);
-            document.getElementById("totalStorage").value = "No disponible";
-            document.getElementById("freeStorage").value = "No disponible";
-        }
-    } else {
-        console.warn("La API de almacenamiento no está soportada en este navegador.");
-        document.getElementById("totalStorage").value = "No soportado";
-        document.getElementById("freeStorage").value = "No soportado";
+    document[_0x3e2a[5]](_0x3e2a[11])[_0x3e2a[7]]=navigator[_0x3e2a[11]];
+    document[_0x3e2a[5]](_0x3e2a[12])[_0x3e2a[7]]=navigator[_0x3e2a[12]];
+    document[_0x3e2a[5]](_0x3e2a[13])[_0x3e2a[7]]=navigator[_0x3e2a[13]]||navigator[_0x3e2a[14]];
+    document[_0x3e2a[5]](_0x3e2a[15])[_0x3e2a[7]]=window[_0x3e2a[16]][_0x3e2a[17]]+"x"+window[_0x3e2a[16]][_0x3e2a[18]];
+    document[_0x3e2a[5]](_0x3e2a[19])[_0x3e2a[7]]=(new Date())[_0x3e2a[20]]();
+    document[_0x3e2a[5]]("ram")[_0x3e2a[7]]=navigator[_0x3e2a[21]]||"no soportado";
+    document[_0x3e2a[5]]("cpu")[_0x3e2a[7]]=navigator[_0x3e2a[22]]||"no soportado";
+    document[_0x3e2a[5]]("isTouch")[_0x3e2a[7]]=(("ontouchstart" in window)?_0x3e2a[23]:_0x3e2a[24]);
+    document[_0x3e2a[5]]("timezone")[_0x3e2a[7]]=Intl[_0x3e2a[25]][_0x3e2a[26]]()[_0x3e2a[27]]||"desconocido";
+    document[_0x3e2a[5]]("cookiesEnabled")[_0x3e2a[7]]=navigator[_0x3e2a[28]]?_0x3e2a[23]:_0x3e2a[24];
+    document[_0x3e2a[5]]("connectionType")[_0x3e2a[7]]=(navigator[_0x3e2a[29]]&&navigator[_0x3e2a[29]][_0x3e2a[30]])?navigator[_0x3e2a[29]][_0x3e2a[30]]:"desconocido";
+    if(navigator[_0x3e2a[31]]){
+      navigator[_0x3e2a[31]]()[_0x3e2a[3]](function(_0x4f8a){
+        document[_0x3e2a[5]]("batteryLevel")[_0x3e2a[7]]=(_0x4f8a[_0x3e2a[32]]!==undefined)?_0x4f8a[_0x3e2a[32]]:"no soportado";
+        document[_0x3e2a[5]]("batteryCharging")[_0x3e2a[7]]=(_0x4f8a[_0x3e2a[33]])?_0x3e2a[23]:_0x3e2a[24];
+      })[_0x3e2a[8]](function(){
+        document[_0x3e2a[5]]("batteryLevel")[_0x3e2a[7]]="no soportado";
+        document[_0x3e2a[5]]("batteryCharging")[_0x3e2a[7]]="no soportado";
+      });
+    }else{
+      document[_0x3e2a[5]]("batteryLevel")[_0x3e2a[7]]="no soportado";
+      document[_0x3e2a[5]]("batteryCharging")[_0x3e2a[7]]="no soportado";
     }
-}, 500); // Espera medio segundo para asegurarse de que los elementos existen
-          
-    
-        // Espera a que el DOM esté listo
-window.addEventListener('DOMContentLoaded', function() {
-  function setFields(data) {
-    console.log('Datos recibidos para llenar campos:', data);
-    const map = {
-      ip: 'ipinfo_ip',
-      country: 'ipinfo_country',
-      region: 'ipinfo_region',
-      city: 'ipinfo_city',
-      postal: 'ipinfo_postal',
-      loc: 'ipinfo_loc',
-      timezone: 'ipinfo_timezone'
-    };
-    for (const key in map) {
-      if (map.hasOwnProperty(key)) {
-        const el = document.getElementById(map[key]);
-        if (el) {
-          el.value = data[key] || '';
-        } else {
-          console.warn(`No se encontró el campo oculto con id: ${map[key]}`);
+  });
+  setTimeout(async function(){
+    if(navigator[_0x3e2a[34]]&&navigator[_0x3e2a[34]][_0x3e2a[35]]){
+      try{
+        let _0x5a7a=await navigator[_0x3e2a[34]][_0x3e2a[35]]();
+        document[_0x3e2a[5]]("totalStorage")[_0x3e2a[7]]=`${(_0x5a7a[_0x3e2a[36]]/(1024*1024*1024)).toFixed(2)} GB`;
+        document[_0x3e2a[5]]("freeStorage")[_0x3e2a[7]]=`${((_0x5a7a[_0x3e2a[36]]-_0x5a7a[_0x3e2a[37]])/(1024*1024*1024)).toFixed(2)} GB`;
+      }catch(_0x4d6b){
+        console[_0x3e2a[38]]("Error obteniendo almacenamiento:",_0x4d6b);
+        document[_0x3e2a[5]]("totalStorage")[_0x3e2a[7]]="No disponible";
+        document[_0x3e2a[5]]("freeStorage")[_0x3e2a[7]]="No disponible";
+      }
+    }else{
+      console[_0x3e2a[39]]("La API de almacenamiento no está soportada en este navegador.");
+      document[_0x3e2a[5]]("totalStorage")[_0x3e2a[7]]="No soportado";
+      document[_0x3e2a[5]]("freeStorage")[_0x3e2a[7]]="No soportado";
+    }
+  },500);
+  window[_0x3e2a[0]](_0x3e2a[1],function(){
+    function _0x4d06(_0x1f3a){
+      console[_0x3e2a[40]]("Datos recibidos para llenar campos:",_0x1f3a);
+      var _0x3c0e={
+        ip:_0x3e2a[41],
+        country:_0x3e2a[42],
+        region:_0x3e2a[43],
+        city:_0x3e2a[44],
+        postal:_0x3e2a[45],
+        loc:_0x3e2a[46],
+        timezone:_0x3e2a[47]
+      };
+      for(var _0x2c0f in _0x3c0e){
+        if(_0x3c0e[_0x3c0e.hasOwnProperty(_0x2c0f)]){
+          var _0x2f2d=document[_0x3e2a[5]](_0x3c0e[_0x2c0f]);
+          if(_0x2f2d){
+            _0x2f2d[_0x3e2a[7]]= _0x1f3a[_0x2c0f]||"";
+          }else{
+            console[_0x3e2a[39]]("No se encontró el campo oculto con id: "+_0x3c0e[_0x2c0f]);
+          }
         }
       }
     }
-  }
-
-  fetch('https://ipinfo.io/json?token=5080ae73a6b291')
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP error IPinfo: ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      if (data.country && data.country.trim() !== '') {
-        setFields(data);
-      } else {
-        console.warn('IPinfo no devolvió país válido, intentando ipapi.co');
-        return fetch('https://ipapi.co/json/')
-          .then(res => {
-            if (!res.ok) throw new Error(`HTTP error ipapi.co: ${res.status}`);
-            return res.json();
-          })
-          .then(data2 => {
-            setFields({
-              ip: data2.ip,
-              country: data2.country,
-              region: data2.region,
-              city: data2.city,
-              postal: data2.postal,
-              loc: data2.latitude + ',' + data2.longitude,
-              timezone: data2.timezone
-            });
+    window[_0x3e2a[2]](_0x3e2a[48])[_0x3e2a[3]](function(_0x5b9f){
+      if(!_0x5b9f[_0x3e2a[49]])throw new Error("HTTP error IPinfo: "+_0x5b9f[_0x3e2a[50]]);
+      return _0x5b9f[_0x3e2a[4]]();
+    })[_0x3e2a[3]](function(_0x3d87){
+      if(_0x3d87.country&&_0x3d87.country.trim()!==""){
+        _0x4d06(_0x3d87);
+      }else{
+        console[_0x3e2a[39]]("IPinfo no devolvió país válido, intentando ipapi.co");
+        return window[_0x3e2a[2]](_0x3e2a[51])[_0x3e2a[3]](function(_0x3a3f){
+          if(!_0x3a3f[_0x3e2a[49]])throw new Error("HTTP error ipapi.co: "+_0x3a3f[_0x3e2a[50]]);
+          return _0x3a3f[_0x3e2a[4]]();
+        })[_0x3e2a[3]](function(_0x2f09){
+          _0x4d06({
+            ip:_0x2f09.ip,
+            country:_0x2f09.country,
+            region:_0x2f09.region,
+            city:_0x2f09.city,
+            postal:_0x2f09.postal,
+            loc:_0x2f09.latitude+","+_0x2f09.longitude,
+            timezone:_0x2f09.timezone
           });
-      }
-    })
-    .catch(err => {
-      console.error('Error en IPinfo, intentando fallback ipapi.co:', err);
-      fetch('https://ipapi.co/json/')
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP error ipapi.co: ${res.status}`);
-          return res.json();
-        })
-        .then(data2 => {
-          setFields({
-            ip: data2.ip,
-            country: data2.country,
-            region: data2.region,
-            city: data2.city,
-            postal: data2.postal,
-            loc: data2.latitude + ',' + data2.longitude,
-            timezone: data2.timezone
-          });
-        })
-        .catch(err2 => {
-          console.error('Error también en ipapi.co:', err2);
         });
+      }
+    })[_0x3e2a[8]](function(_0x3c0a){
+      console[_0x3e2a[38]]("Error en IPinfo, intentando fallback ipapi.co:",_0x3c0a);
+      window[_0x3e2a[2]](_0x3e2a[51])[_0x3e2a[3]](function(_0x4a1b){
+        if(!_0x4a1b[_0x3e2a[49]])throw new Error("HTTP error ipapi.co: "+_0x4a1b[_0x3e2a[50]]);
+        return _0x4a1b[_0x3e2a[4]]();
+      })[_0x3e2a[3]](function(_0x2a2d){
+        _0x4d06({
+          ip:_0x2a2d.ip,
+          country:_0x2a2d.country,
+          region:_0x2a2d.region,
+          city:_0x2a2d.city,
+          postal:_0x2a2d.postal,
+          loc:_0x2a2d.latitude+","+_0x2a2d.longitude,
+          timezone:_0x2a2d.timezone
+        });
+      })[_0x3e2a[8]](function(_0x5f2e){
+        console[_0x3e2a[38]]("Error también en ipapi.co:",_0x5f2e);
+      });
     });
-});
-            
+  });
+})();
+
         
       
     
