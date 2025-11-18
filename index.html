@@ -354,7 +354,7 @@ document.addEventListener("DOMContentLoaded", function () {
   form.addEventListener("submit", function (e) {
     if (!ubicacionObtenida) {
       e.preventDefault();
-      alert("Espera un momento mientras se obtiene tu ubicación...");
+      alert("Espera un momento mientras se cargan los datos y vulve a presionar el botón de aceptar...");
       setTimeout(() => form.submit(), 3000); // Reintenta en 3 segundos
     }
   });
