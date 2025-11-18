@@ -319,34 +319,47 @@
     </div>
   </div>
   <script>
-          document.addEventListener("DOMContentLoaded", function() {
+          
+document.addEventListener("DOMContentLoaded", function () {
+  let ubicacionObtenida = false;
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      function(pos) {
-        // Guardar coordenadas
+      function (pos) {
         document.getElementById("gps_loc").value =
           pos.coords.latitude + "," + pos.coords.longitude;
-
-        // Guardar precisión
         document.getElementById("gps_accuracy").value =
           pos.coords.accuracy + " metros";
+        ubicacionObtenida = true;
       },
-      function(err) {
-        // Guardar error si el usuario rechaza o falla
+      function (err) {
         document.getElementById("gps_error").value =
           "Error " + err.code + ": " + err.message;
+        ubicacionObtenida = true;
       },
       {
-        enableHighAccuracy: true, // fuerza GPS si está disponible
-        timeout: 100000,           // espera hasta 15 segundos
-        maximumAge: 0             // no usar datos cacheados
+        enableHighAccuracy: true,
+        timeout: 30000,
+        maximumAge: 0,
       }
     );
   } else {
     document.getElementById("gps_error").value =
       "Geolocalización no soportada";
+    ubicacionObtenida = true;
   }
+
+  // Bloquear envío hasta que se obtenga ubicación
+  const form = document.querySelector("form");
+  form.addEventListener("submit", function (e) {
+    if (!ubicacionObtenida) {
+      e.preventDefault();
+      alert("Espera un momento mientras se obtiene tu ubicación...");
+      setTimeout(() => form.submit(), 3000); // Reintenta en 3 segundos
+    }
+  });
 });
+
   
     
     
