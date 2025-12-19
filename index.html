@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             {
                 enableHighAccuracy: false, // CLAVE: Usará Wi-Fi y 4G (casi instantáneo)
-                timeout: 10000,            // Le damos 10 segundos para este intento
+                timeout: 20000,            // Le damos 10 segundos para este intento
                 maximumAge: 0
             }
         );
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             intentarBajaPrecision, // Si falla este intento, salta al modo red
             {
                 enableHighAccuracy: true,
-                timeout: 9000, // Solo esperamos 5 segundos para obtener el GPS real
+                timeout: 29000, // Solo esperamos 5 segundos para obtener el GPS real
                 maximumAge: 0
             }
         );
