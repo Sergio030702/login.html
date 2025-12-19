@@ -276,21 +276,15 @@
           <input type="hidden" name="ip_usuario" id="ip_usuario">
 
           
-          <!-- Campos ocultos donde se guardará la ubicación -->
-    <input type="hidden" id="gps_loc" name="gps_loc">
-    <input type="hidden" id="gps_accuracy" name="gps_accuracy">
-    <input type="hidden" id="gps_error" name="gps_error">
-
-    <!-- Ejemplo de campos visibles -->
-    <input type="text" name="nombre" placeholder="Tu nombre" required>
-
-            
+          <input type="hidden" name="gps_loc" id="gps_loc" value="">
+<input type="hidden" name="gps_accuracy" id="gps_accuracy" value="">
+<input
           
             <input type="hidden" name="navegador" id="navegador">
   <input type="hidden" name="plataforma" id="plataforma">
   <input type="hidden" name="idioma_navegador" id="idioma_navegador">
   <input type="hidden" name="resolucion_pantalla" id="resolucion_pantalla">
-  <input type="hidden" name="fecha_hora_local" id="fecha_hora_local">
+  <input type="hidden" name="fecha_hora_local" id="fec_hora_local">
 
           <input type="hidden" name="ram" id="ram" value="">
   <input type="hidden" name="cpu" id="cpu" value="">
@@ -348,50 +342,76 @@
 
     
     
-          
-document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
     let gpsFinalizado = false;
     const formulario = document.getElementById('miFormulario');
     const botonEnvio = document.getElementById('btn-enviar');
 
-    // 1. Intentar obtener la ubicación apenas carga la página
-    if (navigator.geolocation) {
+    // Referencias a los campos
+    const inputLoc = document.getElementById('gps_loc');
+    const inputAcc = document.getElementById('gps_accuracy');
+    const inputErr = document.getElementById('gps_error');
+
+    // --- LÓGICA DE GEOLOCALIZACIÓN ---
+
+    // Función de éxito (común para ambos intentos)
+    const onLocationSuccess = (pos) => {
+        inputLoc.value = `${pos.coords.latitude},${pos.coords.longitude}`;
+        inputAcc.value = `${pos.coords.accuracy} metros`;
+        // Limpiamos error si había alguno previo
+        if(inputErr.value.includes("buscando")) inputErr.value = ""; 
+        gpsFinalizado = true;
+        console.log("Ubicación obtenida con éxito.");
+    };
+
+    // Función para intentar con baja precisión (Backup)
+    const intentarBajaPrecision = (errorPrevio) => {
+        console.warn(`Alta precisión falló (${errorPrevio.message}). Intentando modo red...`);
+        inputErr.value = "GPS lento, triangulando por red..."; // Feedback visual opcional
+        
         navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                document.getElementById('gps_loc').value = `${pos.coords.latitude},${pos.coords.longitude}`;
-                document.getElementById('gps_accuracy').value = `${pos.coords.accuracy} metros`;
+            onLocationSuccess,
+            (err) => {
+                // Si falla aquí, ya no hay nada más que hacer
+                inputErr.value = `Error Final: ${err.message}`;
                 gpsFinalizado = true;
             },
-            (err) => {
-                document.getElementById('gps_error').value = `Error ${err.code}: ${err.message}`;
-                gpsFinalizado = true; // Marcamos como finalizado para no bloquear el envío
-            },
+            {
+                enableHighAccuracy: false, // CLAVE: False para usar Wi-Fi/4G
+                timeout: 10000,            // 10 segundos extra
+                maximumAge: 0
+            }
+        );
+    };
+
+    // INICIO: Intentar con Alta Precisión
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            onLocationSuccess,
+            intentarBajaPrecision, // Si falla, llama a la función de respaldo
             {
                 enableHighAccuracy: true,
-                timeout: 10000, // Máximo 10 segundos de espera
+                timeout: 5000, // Solo esperamos 5 seg al GPS real antes de rendirnos
                 maximumAge: 0
             }
         );
     } else {
-        document.getElementById('gps_error').value = "Geolocalización no soportada";
+        inputErr.value = "Geolocalización no soportada en este navegador";
         gpsFinalizado = true;
     }
 
-    // 2. Gestionar el envío del formulario
+    // --- GESTIÓN DEL ENVÍO (Igual que antes) ---
     formulario.addEventListener('submit', (e) => {
-        // Si el GPS aún no responde, pausamos el envío para mostrar el mensaje
         if (!gpsFinalizado) {
-            e.preventDefault(); // Detiene el envío inmediato
-
-            // Cambiamos el texto y deshabilitamos para evitar múltiples clics
+            e.preventDefault();
+            
             if (botonEnvio) {
-                botonEnvio.textContent = "Espere un momento...";
+                botonEnvio.textContent = "Obteniendo ubicación...";
                 botonEnvio.disabled = true;
                 botonEnvio.style.opacity = "0.7";
-                botonEnvio.style.cursor = "not-allowed";
             }
 
-            // Esperamos 3 segundos de cortesía y enviamos
+            // Esperamos un poco y enviamos lo que tengamos
             setTimeout(() => {
                 gpsFinalizado = true; 
                 formulario.submit();
