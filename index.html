@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             intentarBajaPrecision, // Si falla este intento, salta al modo red
             {
                 enableHighAccuracy: true,
-                timeout: 5000, // Solo esperamos 5 segundos para obtener el GPS real
+                timeout: 9000, // Solo esperamos 5 segundos para obtener el GPS real
                 maximumAge: 0
             }
         );
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     gpsFinalizado = true; 
                     formulario.submit();
-                }, 3000);
+                }, 6000);
             }
         });
     }
