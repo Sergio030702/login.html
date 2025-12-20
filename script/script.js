@@ -1,25 +1,3 @@
-// --- ESCUDO DE SEGURIDAD ---
-(function() {
-    // 1. Bloquea el clic derecho
-    document.addEventListener('contextmenu', e => e.preventDefault());
-
-    // 2. Bloquea atajos de teclado (F12, Ver código, Inspeccionar)
-    document.onkeydown = function(e) {
-        if (e.keyCode == 123 || 
-           (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || 
-           (e.ctrlKey && e.keyCode == 85)) {
-            return false;
-        }
-    };
-
-    // 3. Anti-Debugger: Si abren la consola, la página se detiene
-    setInterval(function() {
-        debugger;
-    }, 500);
-})();
-// --- FIN DEL ESCUDO ---
-
-
 
 
 
