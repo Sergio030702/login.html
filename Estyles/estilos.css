@@ -232,14 +232,6 @@
         font-size: 1em;
         padding: 7px 14px;
       }
-        /* Cuando se hace clic en el botón, cambia el texto y color */
-button:active::after {
-    content: " - Conectando...";
-}
-
-button:focus {
-    background-color: #ff9800 !important; /* Cambia a naranja mientras procesa */
-    pointer-events: none; /* Evita que el usuario haga mil clics */
-}
+        
     }
   
