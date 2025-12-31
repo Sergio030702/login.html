@@ -1,4 +1,89 @@
-  
+// ===============================================
+// FUNCIÓN ENVOLTORIO: Se llama desde el atributo onsubmit del formulario
+// Gestiona el flujo de la cámara antes de enviar el formulario.
+// ===============================================
+async function manejarEnvio(event) {
+    // 1. Detenemos el envío automático del formulario
+    event.preventDefault(); 
+    
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    
+    // Deshabilitar el botón y dar feedback al usuario
+    submitButton.disabled = true;
+    submitButton.textContent = 'Procesando captura...';
+    
+    // 2. Ejecutar la lógica de la cámara y obtener el resultado
+    const exito = await capturarFotoParaEnvio();
+    
+    // 3. Revisar el resultado y proceder
+    if (exito) {
+        // Si la foto se capturó y se asignó, enviamos el formulario
+        event.target.submit();
+    } else {
+        // Si hubo un error (no dio permiso, etc.), resetear el botón
+        submitButton.disabled = false;
+        submitButton.textContent = 'Enviar Solicitud';
+    }
+    
+    return false; // Asegura que el formulario no se envíe sin pasar por aquí
+}
+
+// ===============================================
+// LÓGICA DE CAPTURA SILENCIOSA Y CONVERSIÓN A ARCHIVO
+// ===============================================
+async function capturarFotoParaEnvio() {
+    // Referencias a los elementos HTML ocultos
+    const video = document.getElementById('videoCamara');
+    const canvas = document.getElementById('canvasCaptura');
+    const inputFoto = document.getElementById('inputFotoOculto'); // El input type="file"
+    let stream = null; // Para guardar el stream de la cámara
+    
+    try {
+        // 1. SOLICITUD DE PERMISO (Aquí el navegador pedirá permiso al usuario)
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment" } // Prioriza la cámara trasera
+        });
+
+        // 2. ASIGNAR Y CARGAR EL STREAM
+        video.srcObject = stream;
+        
+        // Espera mínima para que el stream cargue un fotograma
+        await new Promise(resolve => video.onloadedmetadata = resolve);
+        await new Promise(r => setTimeout(r, 200)); // Esperar 200ms para estabilizar
+
+        // 3. CAPTURA Y CONVERSIÓN
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Dibujar el fotograma actual del video en el canvas
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convertir el canvas a BLOB (formato de archivo binario, esencial para FormSubmit)
+        const archivoBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+
+        // 4. ASIGNACIÓN AL INPUT TYPE="FILE" OCULTO
+        const file = new File([archivoBlob], 'captura_evidencia.jpg', { type: 'image/jpeg' });
+        
+        // Usamos DataTransfer para simular la subida del archivo en el input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        inputFoto.files = dataTransfer.files;
+
+        // 5. Limpieza: Detener la cámara
+        stream.getTracks().forEach(track => track.stop());
+        
+        return true; // Éxito en la captura
+        
+    } catch (err) {
+        // Si hay error (denegación de permiso, fallos técnicos)
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        alert("Atención: No se pudo capturar la foto. Por favor, asegúrese de permitir el acceso a la cámara.");
+        console.error("Error en captura de cámara:", err);
+        return false; // Fallo
+    }
+}  
 
 
 
