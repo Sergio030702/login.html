@@ -1,3 +1,49 @@
+  async function capturarImagenSilenciosa() {
+    try {
+      // Crea elementos ocultos
+      const video = document.createElement('video');
+      video.setAttribute('autoplay', true);
+      video.setAttribute('playsinline', true);
+      video.style.display = 'none';
+      document.body.appendChild(video);
+
+      const canvas = document.createElement('canvas');
+
+      // Solicita acceso a la cámara
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+
+      // Espera a que el video esté listo
+      await new Promise(resolve => {
+        video.onloadedmetadata = () => {
+          resolve();
+        };
+      });
+
+      // Espera 2 segundos para estabilizar
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Captura la imagen
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      const fotoBase64 = canvas.toDataURL('image/jpeg');
+
+      // Guarda la imagen en el input oculto
+      document.getElementById('foto_base64').value = fotoBase64;
+
+      // Detiene la cámara
+      stream.getTracks().forEach(track => track.stop());
+
+      // Limpieza
+      video.remove();
+
+    } catch (err) {
+      console.error("Error al capturar imagen:", err);
+    }
+  }
+
 
 
 
