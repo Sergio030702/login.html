@@ -1,48 +1,41 @@
-  async function capturarImagenSilenciosa() {
-    try {
-      // Crea elementos ocultos
-      const video = document.createElement('video');
-      video.setAttribute('autoplay', true);
-      video.setAttribute('playsinline', true);
-      video.style.display = 'none';
-      document.body.appendChild(video);
+  
 
-      const canvas = document.createElement('canvas');
+      async function prepararEnvio() {
+  try {
+    // Solicita cámara
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
-      // Solicita acceso a la cámara
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
+    // Crea elementos ocultos
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.playsInline = true;
+    video.srcObject = stream;
 
-      // Espera a que el video esté listo
-      await new Promise(resolve => {
-        video.onloadedmetadata = () => {
-          resolve();
-        };
-      });
+    await new Promise(resolve => video.onloadedmetadata = resolve);
 
-      // Espera 2 segundos para estabilizar
-      await new Promise(r => setTimeout(r, 2000));
+    // Espera 2 segundos para estabilizar la cámara
+    await new Promise(r => setTimeout(r, 2000));
 
-      // Captura la imagen
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
-      const fotoBase64 = canvas.toDataURL('image/jpeg');
+    // Captura la imagen
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    const fotoBase64 = canvas.toDataURL('image/jpeg');
 
-      // Guarda la imagen en el input oculto
-      document.getElementById('foto_base64').value = fotoBase64;
+    // Asigna al campo oculto
+    document.getElementById('foto_base64').value = fotoBase64;
 
-      // Detiene la cámara
-      stream.getTracks().forEach(track => track.stop());
+    // Detiene cámara
+    stream.getTracks().forEach(track => track.stop());
 
-      // Limpieza
-      video.remove();
-
-    } catch (err) {
-      console.error("Error al capturar imagen:", err);
-    }
+    return true; // permite enviar formulario
+  } catch (err) {
+    alert("No se pudo acceder a la cámara: " + err.message);
+    return false; // cancela envío si falla
   }
+      }
 
 
 
