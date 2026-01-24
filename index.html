@@ -130,121 +130,130 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN ---
-        const miNumero = "56259361"; // <--- Tu número sin el +
-        const totalGirasoles = 15;
         
-        const phrases = [
-    "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
-    "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
-    "Si te quiero es porque sos mi amor, mi cómplice y todo. (Benedetti) 🌻",
-    "En un beso, sabrás todo lo que he callado. (Pablo Neruda) 💋",
-    "Tú eres la respuesta que nunca busqué, pero que siempre necesité. ✨",
-    "Mi táctica es mirarte, aprender como sos, quererte como sos. (Benedetti) 💎",
-    "Ven a dormir conmigo: no haremos el amor, él nos hará a nosotros. (Cortázar) 🌙",
-    "Para mi corazón basta tu pecho, para tu libertad bastan mis alas. (Neruda) 🦋",
-    "Si el girasol busca el sol, mi alma solo sabe buscar tu luz. ☀️",
-    "Te quiero para volvernos locos de risa, ebrios de nada. (Cortázar) 🍷",
-    "Amo tus pies porque anduvieron sobre la tierra hasta encontrarme. (Neruda) 👣",
-    "Tú eres mi momento favorito de todos los días. 💜",
-    "Hay besos que en los labios dejan huellas de un sol frío. (Gabriela Mistral) ❄️",
-    "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
-    "Usted es la mujer por la que mi corazón late en verso. ✍️",
-    "La magia no es un truco, la magia es que existas tú. 🎩✨",
-    "Espero curarme de ti en unos días. Debo dejar de fumarte, de beberte. (Sabines) 🚬",
-    "No te cambio por nadie, porque nadie tiene tu forma de mirar. 👁️‍🗨️",
-    "Nacimos para encontrarnos, mi vida es un jardín desde que estás tú. 🌸",
-    "Queda prohibido no sonreír a los problemas, no luchar por lo que quieres. (Neruda) ☀️"
-];
+    // 1. CONFIGURACIÓN (Pon tu número aquí)
+    const miNumero = "TUNUMERO"; 
+    const totalGirasoles = 15;
+    
+    // 2. LISTA DE FRASES (20 frases únicas)
+    let phrases = [
+        "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
+        "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
+        "Si te quiero es porque sos mi amor, mi cómplice y todo. (Benedetti) 🌻",
+        "En un beso, sabrás todo lo que he callado. (Pablo Neruda) 💋",
+        "Tú eres la respuesta que nunca busqué, pero que siempre necesité. ✨",
+        "Mi táctica es mirarte, aprender como sos, quererte como sos. (Benedetti) 💎",
+        "Ven a dormir conmigo: no haremos el amor, él nos hará a nosotros. (Cortázar) 🌙",
+        "Para mi corazón basta tu pecho, para tu libertad bastan mis alas. (Neruda) 🦋",
+        "Si el girasol busca el sol, mi alma solo sabe buscar tu luz. ☀️",
+        "Te quiero para volvernos locos de risa, ebrios de nada. (Cortázar) 🍷",
+        "Amo tus pies porque anduvieron sobre la tierra hasta encontrarme. (Neruda) 👣",
+        "Tú eres mi momento favorito de todos los días. 💜",
+        "Hay besos que en los labios dejan huellas de un sol frío. (Gabriela Mistral) ❄️",
+        "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
+        "Usted es la mujer por la que mi corazón late en verso. ✍️",
+        "La magia no es un truco, la magia es que existas tú. 🎩✨",
+        "Espero curarme de ti en unos días. Debo dejar de fumarte. (Sabines) 🚬",
+        "No te cambio por nadie, porque nadie tiene tu forma de mirar. 👁️‍🗨️",
+        "Nacimos para encontrarnos, mi vida es un jardín desde que estás tú. 🌸",
+        "Queda prohibido no sonreír a los problemas. (Neruda) ☀️"
+    ];
 
-        let eliminados = 0;
+    // 3. LÓGICA DE MEZCLA (Shuffle) - Esto evita las repeticiones
+    phrases.sort(() => Math.random() - 0.5);
 
-        // Crear Polvo de Estrellas
-        const starsContainer = document.getElementById('stars-container');
-        for (let i = 0; i < 50; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            const size = Math.random() * 3 + 'px';
-            star.style.width = size;
-            star.style.height = size;
-            star.style.left = Math.random() * 100 + 'vw';
-            star.style.top = Math.random() * 100 + 'vh';
-            star.style.animationDuration = Math.random() * 5 + 5 + 's';
-            starsContainer.appendChild(star);
+    let eliminados = 0;
+
+    // 4. GENERAR ESTRELLAS DE FONDO
+    const starsContainer = document.getElementById('stars-container');
+    for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 3 + 'px';
+        star.style.width = size; star.style.height = size;
+        star.style.left = Math.random() * 100 + 'vw';
+        star.style.top = Math.random() * 100 + 'vh';
+        star.style.animationDuration = Math.random() * 5 + 5 + 's';
+        starsContainer.appendChild(star);
+    }
+
+    // 5. FUNCIÓN PARA CREAR GIRASOLES
+    function createSunflower() {
+        const garden = document.getElementById('garden');
+        const sf = document.createElement('div');
+        sf.className = 'sunflower';
+        sf.style.left = Math.random() * 80 + 5 + 'vw';
+        sf.style.top = Math.random() * 80 + 5 + 'vh';
+
+        const ring = document.createElement('div');
+        ring.className = 'ring';
+        sf.appendChild(ring);
+
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            p.style.transform = `rotate(${i * 30}deg)`;
+            sf.appendChild(p);
         }
 
-        function createSunflower() {
-            const garden = document.getElementById('garden');
-            const sf = document.createElement('div');
-            sf.className = 'sunflower';
-            sf.style.left = Math.random() * 80 + 5 + 'vw';
-            sf.style.top = Math.random() * 80 + 5 + 'vh';
+        const center = document.createElement('div');
+        center.className = 'center';
+        center.innerHTML = '<div class="heart">♥</div>';
+        sf.appendChild(center);
 
-            const ring = document.createElement('div');
-            ring.className = 'ring';
-            sf.appendChild(ring);
-
-            for (let i = 0; i < 12; i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.style.transform = `rotate(${i * 30}deg)`;
-                sf.appendChild(p);
-            }
-
-            const center = document.createElement('div');
-            center.className = 'center';
-            center.innerHTML = '<div class="heart">♥</div>';
-            sf.appendChild(center);
-
-            sf.onclick = (e) => {
-                e.stopPropagation();
-                ring.style.borderColor = "var(--morado)"; // Cambio a morado al tocar
-                sf.style.opacity = '0';
-                sf.style.transform = 'scale(2)';
-                setTimeout(() => {
-                    sf.remove();
-                    eliminados++;
-                    showModal();
-                }, 400);
-            };
-            garden.appendChild(sf);
-        }
-
-        function showModal() {
-            const modal = document.getElementById('modal');
-            const content = document.getElementById('mContent');
-            document.getElementById('phraseText').innerText = phrases[Math.floor(Math.random() * phrases.length)];
-            modal.style.display = 'flex';
-            setTimeout(() => content.classList.add('show'), 10);
-        }
-
-        function closeModal() {
-            document.getElementById('mContent').classList.remove('show');
+        sf.onclick = (e) => {
+            e.stopPropagation();
+            ring.style.borderColor = "var(--morado)";
+            sf.style.opacity = '0';
+            sf.style.transform = 'scale(2)';
             setTimeout(() => {
-                document.getElementById('modal').style.display = 'none';
-                if (eliminados === totalGirasoles) {
-                    showFinalScreen();
-                }
-            }, 300);
-        }
+                sf.remove();
+                showModal();
+            }, 400);
+        };
+        garden.appendChild(sf);
+    }
 
-        function showFinalScreen() {
-            const finalPetals = document.getElementById('final-petals');
-            for (let i = 0; i < 12; i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.style.transform = `rotate(${i * 30}deg)`;
-                finalPetals.appendChild(p);
+    // 6. MOSTRAR FRASE (Usa el índice 'eliminados' para no repetir)
+    function showModal() {
+        const modal = document.getElementById('modal');
+        const content = document.getElementById('mContent');
+        document.getElementById('phraseText').innerText = phrases[eliminados];
+        eliminados++; 
+        modal.style.display = 'flex';
+        setTimeout(() => content.classList.add('show'), 10);
+    }
+
+    function closeModal() {
+        document.getElementById('mContent').classList.remove('show');
+        setTimeout(() => {
+            document.getElementById('modal').style.display = 'none';
+            if (eliminados === totalGirasoles) {
+                showFinalScreen();
             }
-            document.getElementById('final-screen').style.display = 'flex';
-        }
+        }, 300);
+    }
 
-        function enviarWhatsApp() {
-            const mensaje = encodeURIComponent("¡Me encantó tu jardín! Gracias por los girasoles y las frases de Neruda... 💜🌻 Déjame saber que frase  te gusto más");
-            window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${mensaje}`, '_blank');
+    // 7. PANTALLA FINAL Y WHATSAPP
+    function showFinalScreen() {
+        const finalPetals = document.getElementById('final-petals');
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            p.style.transform = `rotate(${i * 30}deg)`;
+            finalPetals.appendChild(p);
         }
+        document.getElementById('final-screen').style.display = 'flex';
+    }
 
-        for (let i = 0; i < totalGirasoles; i++) { createSunflower(); }
-    </script>
+    function enviarWhatsApp() {
+        const mensaje = encodeURIComponent("¡Me encantó tu jardín! Gracias por los girasoles y las frases tan lindas... 💜🌻");
+        window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${mensaje}`, '_blank');
+    }
+
+    // INICIO
+    for (let i = 0; i < totalGirasoles; i++) { createSunflower(); }
+
+          </script>
 </body>
 </html>
