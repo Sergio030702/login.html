@@ -247,6 +247,18 @@
         }
 
         for (let i = 0; i < totalGirasoles; i++) createSunflower();
+
+
+        // EFECTO DE MOVIMIENTO CON EL CELULAR
+window.addEventListener('deviceorientation', (event) => {
+    const x = event.beta;  // Inclinación hacia adelante/atrás
+    const y = event.gamma; // Inclinación izquierda/derecha
+
+    const stars = document.getElementById('stars-container');
+    // Movemos el fondo sutilmente según la inclinación
+    stars.style.transform = `translate(${y / 2}px, ${x / 2}px)`;
+});
+    
     </script>
 </body>
 </html>
