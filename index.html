@@ -132,7 +132,7 @@
     <script>
         
     // 1. CONFIGURACIÓN (Pon tu número aquí)
-    const miNumero = "TUNUMERO"; 
+    const miNumero = "56259361"; 
     const totalGirasoles = 15;
     
     // 2. LISTA DE FRASES (20 frases únicas)
@@ -247,7 +247,7 @@
     }
 
     function enviarWhatsApp() {
-        const mensaje = encodeURIComponent("¡Me encantó tu jardín! Gracias por los girasoles y las frases tan lindas... 💜🌻");
+        const mensaje = encodeURIComponent("¡Me encantó tu jardín! Gracias por los girasoles y las frases tan lindas... 💜 Déjame saber que frase te gustó más 🌻");
         window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${mensaje}`, '_blank');
     }
 
