@@ -10,9 +10,9 @@
             --amarillo: #ffdb3a;
             --naranja: #e67e00;
             --rosa: #ff69b4;
+            --oro: #fff700;
         }
 
-        /* RESET PARA EVITAR SELECCIÓN Y RECUADROS AZULES */
         * {
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
@@ -30,23 +30,54 @@
             touch-action: none;
         }
 
-        /* FONDO MÁGICO */
+        /* FONDO Y ESTRELLAS */
+        #stars-container {
+            position: absolute;
+            width: 110%; height: 110%;
+            top: -5%; left: -5%;
+            transition: transform 0.1s ease-out;
+            pointer-events: none;
+        }
+
         .star {
             position: absolute;
             background: white;
             border-radius: 50%;
             opacity: 0.5;
-            animation: moveStars 10s linear infinite;
+            animation: moveStars 15s linear infinite;
         }
 
-        /* ESTILO GIRASOL */
+        /* CONTADOR */
+        #contador {
+            position: fixed; top: 20px; left: 20px;
+            color: var(--amarillo); font-family: sans-serif;
+            font-size: 0.8rem; z-index: 50;
+            background: rgba(0,0,0,0.4);
+            padding: 8px 15px; border-radius: 20px;
+            border: 1px solid rgba(255,219,58,0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        /* GIRASOL ESTÁNDAR */
         .sunflower {
             position: absolute;
             width: 100px; height: 100px;
             cursor: pointer;
-            transition: all 0.5s ease;
+            transition: opacity 0.4s, transform 0.4s;
             transform-style: preserve-3d;
             animation: flotar 4s ease-in-out infinite;
+        }
+
+        /* GIRASOL DORADO (FINAL) */
+        .golden-sunflower {
+            filter: drop-shadow(0 0 15px var(--oro));
+        }
+        .golden-sunflower .petal {
+            background: linear-gradient(to top, #ffcc00, var(--oro)) !important;
+        }
+        .golden-sunflower .ring {
+            border-color: white !important;
+            box-shadow: 0 0 20px white;
         }
 
         .ring {
@@ -73,37 +104,31 @@
 
         .heart { color: var(--rosa); font-size: 14px; animation: latido 1s infinite; }
 
-        /* MODAL DE FRASES */
+        /* MODAL */
         #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10, 0, 20, 0.95); display: none;
             justify-content: center; align-items: center; z-index: 100;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
         }
 
         .modal-content {
             background: linear-gradient(135deg, #2e0046, #1a0026);
             padding: 40px; border-radius: 30px; border: 2px solid var(--amarillo);
             text-align: center; color: white; max-width: 80%;
-            transform: scale(0.8); transition: transform 0.3s ease;
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .modal-content.show { transform: scale(1); }
 
         .fav-btn {
-            margin-top: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--amarillo);
-            color: white; padding: 12px 20px;
-            border-radius: 30px; cursor: pointer;
+            margin-top: 15px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--amarillo); color: white;
+            padding: 12px 20px; border-radius: 30px; cursor: pointer;
             font-size: 0.9rem; transition: 0.3s;
         }
 
-        .fav-btn.selected {
-            background: var(--rosa);
-            border-color: var(--rosa);
-            transform: scale(1.1);
-        }
+        .fav-btn.selected { background: var(--rosa); border-color: var(--rosa); transform: scale(1.1); }
 
         /* CIERRE */
         #final-screen {
@@ -127,6 +152,7 @@
 </head>
 <body>
 
+    <div id="contador">Pensamientos: <span id="count">0</span>/15</div>
     <div id="stars-container"></div>
     <div id="garden"></div>
 
@@ -139,17 +165,16 @@
     </div>
 
     <div id="final-screen">
-        <h1 style="color: var(--amarillo);">¡Jardín Completo! 🌻</h1>
-        <p style="opacity: 0.8;">Has recogido todos los pensamientos.</p>
+        <h1 style="color: var(--amarillo); font-size: 2rem;">¡Jardín Completo! 🌻</h1>
+        <p style="opacity: 0.8; padding: 0 30px;">Has recogido cada pensamiento que guardé para ti.</p>
         <button onclick="enviarWhatsApp()" class="btn-whatsapp">Díselo por WhatsApp 📱</button>
     </div>
 
     <script>
-        // CONFIGURACIÓN (Pon tu número aquí)
-        const miNumero = "56259361"; 
+        // CONFIGURACIÓN (Pon tu número aquí sin el +)
+        const miNumero = "TUNUMERO"; 
         const totalGirasoles = 15;
         
-        // SONIDO MAGICO (Base64 corto)
         const popAudio = new Audio("https://www.soundjay.com/buttons/sounds/button-37a.mp3");
 
         let phrases = [
@@ -169,7 +194,7 @@
             "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
             "Usted es la mujer por la que mi corazón late en verso. ✍️",
             "La magia no es un truco, la magia es que existas tú. 🎩✨",
-            "Espero curarme de ti en unos días. Debo dejar de fumarte. (Sabines) 🚬",
+            "Espero curarme de ti en unos días. (Sabines) 🚬",
             "No te cambio por nadie, porque nadie tiene tu forma de mirar. 👁️‍🗨️",
             "Nacimos para encontrarnos, mi vida es un jardín desde que estás tú. 🌸",
             "Queda prohibido no sonreír a los problemas. (Neruda) ☀️"
@@ -180,35 +205,52 @@
         let misFavoritas = [];
 
         // Estrellas
-        for (let i = 0; i < 40; i++) {
+        const starsWrap = document.getElementById('stars-container');
+        for (let i = 0; i < 50; i++) {
             const s = document.createElement('div');
             s.className = 'star';
             s.style.width = s.style.height = Math.random() * 3 + 'px';
-            s.style.left = Math.random() * 100 + 'vw';
-            s.style.top = Math.random() * 100 + 'vh';
-            s.style.animationDuration = Math.random() * 5 + 5 + 's';
-            document.getElementById('stars-container').appendChild(s);
+            s.style.left = Math.random() * 100 + '%';
+            s.style.top = Math.random() * 100 + '%';
+            s.style.animationDuration = Math.random() * 10 + 5 + 's';
+            starsWrap.appendChild(s);
         }
 
-        function createSunflower() {
+        // EFECTO MOVIMIENTO CELULAR
+        window.addEventListener('deviceorientation', (event) => {
+            const x = event.beta;  
+            const y = event.gamma; 
+            starsWrap.style.transform = `translate(${y / 3}px, ${x / 3}px)`;
+        });
+
+        function createSunflower(isLast = false) {
             const garden = document.getElementById('garden');
             const sf = document.createElement('div');
-            sf.className = 'sunflower';
-            sf.style.left = Math.random() * 80 + 5 + 'vw';
-            sf.style.top = Math.random() * 80 + 5 + 'vh';
+            sf.className = 'sunflower' + (isLast ? ' golden-sunflower' : '');
+            
+            if (isLast) {
+                sf.style.left = 'calc(50vw - 50px)';
+                sf.style.top = 'calc(50vh - 50px)';
+                sf.style.transform = 'scale(1.4)';
+            } else {
+                sf.style.left = Math.random() * 75 + 10 + 'vw';
+                sf.style.top = Math.random() * 75 + 10 + 'vh';
+            }
 
             sf.innerHTML = `<div class="ring"></div>${Array(12).fill('<div class="petal"></div>').join('')}<div class="center"><div class="heart">♥</div></div>`;
-            
-            // Asignar rotación a pétalos
-            const petals = sf.querySelectorAll('.petal');
-            petals.forEach((p, i) => p.style.transform = `rotate(${i * 30}deg)`);
+            sf.querySelectorAll('.petal').forEach((p, i) => p.style.transform = `rotate(${i * 30}deg)`);
 
             sf.onclick = (e) => {
                 e.stopPropagation();
-                popAudio.play(); // Sonido al tocar
+                popAudio.play();
                 sf.style.opacity = '0';
-                sf.style.transform = 'scale(2)';
-                setTimeout(() => { sf.remove(); showModal(); }, 400);
+                sf.style.transform = isLast ? 'scale(4)' : 'scale(2.5)';
+                setTimeout(() => { 
+                    sf.remove(); 
+                    eliminados++;
+                    document.getElementById('count').innerText = eliminados;
+                    showModal(); 
+                }, 400);
             };
             garden.appendChild(sf);
         }
@@ -217,8 +259,7 @@
             const btn = document.getElementById('btnFav');
             btn.innerText = "Guardar frase ❤️";
             btn.classList.remove('selected');
-            document.getElementById('phraseText').innerText = phrases[eliminados];
-            eliminados++;
+            document.getElementById('phraseText').innerText = phrases[eliminados - 1];
             document.getElementById('modal').style.display = 'flex';
             setTimeout(() => document.getElementById('mContent').classList.add('show'), 10);
         }
@@ -227,38 +268,31 @@
             e.stopPropagation();
             const txt = document.getElementById('phraseText').innerText;
             if(!misFavoritas.includes(txt)) misFavoritas.push(txt);
-            document.getElementById('btnFav').innerText = "¡Guardada! ✨";
+            document.getElementById('btnFav').innerText = "¡En tu colección! ✨";
             document.getElementById('btnFav').classList.add('selected');
-            setTimeout(closeModal, 600);
+            setTimeout(closeModal, 700);
         }
 
         function closeModal() {
             document.getElementById('mContent').classList.remove('show');
             setTimeout(() => {
                 document.getElementById('modal').style.display = 'none';
-                if (eliminados === totalGirasoles) document.getElementById('final-screen').style.display = 'flex';
+                if (eliminados === totalGirasoles - 1) {
+                    createSunflower(true); // Aparece el dorado
+                } else if (eliminados === totalGirasoles) {
+                    document.getElementById('final-screen').style.display = 'flex';
+                }
             }, 300);
         }
 
         function enviarWhatsApp() {
-            let favs = misFavoritas.length > 0 ? "Mis favoritas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n") : "¡Me encantó todo! 💜";
-            const url = `https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡Terminé el jardín!\n\n" + favs)}`;
+            let favs = misFavoritas.length > 0 ? "Mis frases favoritas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n") : "¡Me encantaron todas! 💜";
+            const url = `https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡He completado tu jardín!\n\n" + favs)}`;
             window.open(url, '_blank');
         }
 
-        for (let i = 0; i < totalGirasoles; i++) createSunflower();
-
-
-        // EFECTO DE MOVIMIENTO CON EL CELULAR
-window.addEventListener('deviceorientation', (event) => {
-    const x = event.beta;  // Inclinación hacia adelante/atrás
-    const y = event.gamma; // Inclinación izquierda/derecha
-
-    const stars = document.getElementById('stars-container');
-    // Movemos el fondo sutilmente según la inclinación
-    stars.style.transform = `translate(${y / 2}px, ${x / 2}px)`;
-});
-    
+        // Iniciar con 14 normales
+        for (let i = 0; i < totalGirasoles - 1; i++) createSunflower(false);
     </script>
 </body>
 </html>
