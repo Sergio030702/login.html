@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Jardín Eterno 💜</title>
     <style>
         :root {
@@ -10,6 +10,15 @@
             --amarillo: #ffdb3a;
             --naranja: #e67e00;
             --rosa: #ff69b4;
+        }
+
+        /* RESET PARA EVITAR SELECCIÓN Y RECUADROS AZULES */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            outline: none;
         }
 
         body {
@@ -45,7 +54,6 @@
             border: 2px solid var(--amarillo); border-radius: 50%;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
             box-shadow: 0 0 10px var(--amarillo); z-index: 2;
-            transition: border-color 0.3s ease;
         }
 
         .petal {
@@ -65,62 +73,56 @@
 
         .heart { color: var(--rosa); font-size: 14px; animation: latido 1s infinite; }
 
-        /* VENTANA DE FRASES (MODAL) */
+        /* MODAL DE FRASES */
         #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 0, 20, 0.9); display: none;
+            background: rgba(10, 0, 20, 0.95); display: none;
             justify-content: center; align-items: center; z-index: 100;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px);
         }
 
         .modal-content {
             background: linear-gradient(135deg, #2e0046, #1a0026);
             padding: 40px; border-radius: 30px; border: 2px solid var(--amarillo);
-            text-align: center; color: white; max-width: 75%;
-            transform: scale(0.7); transition: transform 0.4s ease;
-            box-shadow: 0 0 30px rgba(255, 219, 58, 0.2);
+            text-align: center; color: white; max-width: 80%;
+            transform: scale(0.8); transition: transform 0.3s ease;
         }
 
         .modal-content.show { transform: scale(1); }
 
         .fav-btn {
             margin-top: 15px;
-            background: none;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--amarillo);
+            color: white; padding: 12px 20px;
+            border-radius: 30px; cursor: pointer;
+            font-size: 0.9rem; transition: 0.3s;
         }
 
         .fav-btn.selected {
             background: var(--rosa);
             border-color: var(--rosa);
-            transform: scale(1.05);
+            transform: scale(1.1);
         }
 
-        /* PANTALLA DE CIERRE */
+        /* CIERRE */
         #final-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--morado); display: none; flex-direction: column;
             justify-content: center; align-items: center; z-index: 200;
-            color: white; text-align: center; animation: fadeIn 2s ease;
+            color: white; text-align: center;
         }
 
         .btn-whatsapp {
             background-color: #25d366; color: white; padding: 18px 35px;
             border-radius: 50px; text-decoration: none; font-weight: bold;
-            font-family: sans-serif; margin-top: 25px;
-            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.4);
-            border: none; cursor: pointer; font-size: 1rem;
+            font-family: sans-serif; margin-top: 30px; border: none;
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
         }
 
         @keyframes moveStars { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
-        @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -130,28 +132,26 @@
 
     <div id="modal">
         <div class="modal-content" id="mContent">
-            <div id="phraseText" style="font-size: 1.2rem; font-style: italic; line-height: 1.6; margin-bottom: 15px;"></div>
-            <button id="btnFav" class="fav-btn" onclick="addToFavorites(event)">Me encanta esta frase ❤️</button>
-            <div style="margin-top:25px; font-size: 0.8rem; color: var(--amarillo); letter-spacing: 2px; font-family: sans-serif; cursor: pointer;" onclick="closeModal()">CONTINUAR ➔</div>
+            <div id="phraseText" style="font-size: 1.2rem; font-style: italic; line-height: 1.6; margin-bottom: 20px;"></div>
+            <button id="btnFav" class="fav-btn" onclick="addToFavorites(event)">Guardar frase ❤️</button>
+            <div style="margin-top:30px; color: var(--amarillo); letter-spacing: 2px; font-size: 0.8rem; cursor: pointer;" onclick="closeModal()">SIGUIENTE ➔</div>
         </div>
     </div>
 
     <div id="final-screen">
-        <div class="sunflower" style="position: relative; transform: scale(1.6); margin-bottom: 60px; animation: flotar 5s infinite; cursor: default;">
-            <div class="ring" style="width: 100px; height: 100px;"></div>
-            <div id="final-petals"></div>
-            <div class="center" style="width: 45px; height: 45px;"><div class="heart" style="font-size: 18px;">♥</div></div>
-        </div>
-        <h1 style="color: var(--amarillo); margin: 0; font-size: 1.8rem;">¡Jardín Completado! 🌻</h1>
-        <p id="final-desc" style="padding: 20px 40px; opacity: 0.8; line-height: 1.5;">Cada flor era un pensamiento,<br>pero mi favorita siempre serás tú.</p>
+        <h1 style="color: var(--amarillo);">¡Jardín Completo! 🌻</h1>
+        <p style="opacity: 0.8;">Has recogido todos los pensamientos.</p>
         <button onclick="enviarWhatsApp()" class="btn-whatsapp">Díselo por WhatsApp 📱</button>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN ---
-        const miNumero = "56259361"; // Reemplaza con tu número
+        // CONFIGURACIÓN (Pon tu número aquí)
+        const miNumero = "56259361"; 
         const totalGirasoles = 15;
         
+        // SONIDO MAGICO (Base64 corto)
+        const popAudio = new Audio("https://www.soundjay.com/buttons/sounds/button-37a.mp3");
+
         let phrases = [
             "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
             "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
@@ -169,28 +169,25 @@
             "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
             "Usted es la mujer por la que mi corazón late en verso. ✍️",
             "La magia no es un truco, la magia es que existas tú. 🎩✨",
-            "Espero curarme de ti en unos días. (Sabines) 🚬",
+            "Espero curarme de ti en unos días. Debo dejar de fumarte. (Sabines) 🚬",
             "No te cambio por nadie, porque nadie tiene tu forma de mirar. 👁️‍🗨️",
             "Nacimos para encontrarnos, mi vida es un jardín desde que estás tú. 🌸",
             "Queda prohibido no sonreír a los problemas. (Neruda) ☀️"
         ];
 
-        // Barajar frases
         phrases.sort(() => Math.random() - 0.5);
-
         let eliminados = 0;
         let misFavoritas = [];
 
-        // Crear Estrellas
-        const starsContainer = document.getElementById('stars-container');
-        for (let i = 0; i < 50; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.width = star.style.height = Math.random() * 3 + 'px';
-            star.style.left = Math.random() * 100 + 'vw';
-            star.style.top = Math.random() * 100 + 'vh';
-            star.style.animationDuration = Math.random() * 5 + 5 + 's';
-            starsContainer.appendChild(star);
+        // Estrellas
+        for (let i = 0; i < 40; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.width = s.style.height = Math.random() * 3 + 'px';
+            s.style.left = Math.random() * 100 + 'vw';
+            s.style.top = Math.random() * 100 + 'vh';
+            s.style.animationDuration = Math.random() * 5 + 5 + 's';
+            document.getElementById('stars-container').appendChild(s);
         }
 
         function createSunflower() {
@@ -200,88 +197,56 @@
             sf.style.left = Math.random() * 80 + 5 + 'vw';
             sf.style.top = Math.random() * 80 + 5 + 'vh';
 
-            const ring = document.createElement('div');
-            ring.className = 'ring';
-            sf.appendChild(ring);
-
-            for (let i = 0; i < 12; i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.style.transform = `rotate(${i * 30}deg)`;
-                sf.appendChild(p);
-            }
-
-            const center = document.createElement('div');
-            center.className = 'center';
-            center.innerHTML = '<div class="heart">♥</div>';
-            sf.appendChild(center);
+            sf.innerHTML = `<div class="ring"></div>${Array(12).fill('<div class="petal"></div>').join('')}<div class="center"><div class="heart">♥</div></div>`;
+            
+            // Asignar rotación a pétalos
+            const petals = sf.querySelectorAll('.petal');
+            petals.forEach((p, i) => p.style.transform = `rotate(${i * 30}deg)`);
 
             sf.onclick = (e) => {
                 e.stopPropagation();
-                ring.style.borderColor = "var(--morado)";
+                popAudio.play(); // Sonido al tocar
                 sf.style.opacity = '0';
                 sf.style.transform = 'scale(2)';
-                setTimeout(() => {
-                    sf.remove();
-                    showModal();
-                }, 400);
+                setTimeout(() => { sf.remove(); showModal(); }, 400);
             };
             garden.appendChild(sf);
         }
 
         function showModal() {
-            const modal = document.getElementById('modal');
             const btn = document.getElementById('btnFav');
-            btn.innerText = "Me encanta esta frase ❤️";
+            btn.innerText = "Guardar frase ❤️";
             btn.classList.remove('selected');
-            
             document.getElementById('phraseText').innerText = phrases[eliminados];
-            eliminados++; 
-            modal.style.display = 'flex';
+            eliminados++;
+            document.getElementById('modal').style.display = 'flex';
             setTimeout(() => document.getElementById('mContent').classList.add('show'), 10);
         }
 
         function addToFavorites(e) {
             e.stopPropagation();
-            const frase = document.getElementById('phraseText').innerText;
-            if(!misFavoritas.includes(frase)) misFavoritas.push(frase);
-            
-            const btn = document.getElementById('btnFav');
-            btn.innerText = "¡Guardada en favoritos! ✨";
-            btn.classList.add('selected');
-            setTimeout(closeModal, 800);
+            const txt = document.getElementById('phraseText').innerText;
+            if(!misFavoritas.includes(txt)) misFavoritas.push(txt);
+            document.getElementById('btnFav').innerText = "¡Guardada! ✨";
+            document.getElementById('btnFav').classList.add('selected');
+            setTimeout(closeModal, 600);
         }
 
         function closeModal() {
             document.getElementById('mContent').classList.remove('show');
             setTimeout(() => {
                 document.getElementById('modal').style.display = 'none';
-                if (eliminados === totalGirasoles) showFinalScreen();
+                if (eliminados === totalGirasoles) document.getElementById('final-screen').style.display = 'flex';
             }, 300);
         }
 
-        function showFinalScreen() {
-            const finalPetals = document.getElementById('final-petals');
-            for (let i = 0; i < 12; i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.style.transform = `rotate(${i * 30}deg)`;
-                finalPetals.appendChild(p);
-            }
-            document.getElementById('final-screen').style.display = 'flex';
-        }
-
         function enviarWhatsApp() {
-            let mensaje = "¡Terminé tu jardín de girasoles! 🌻\n\n";
-            if(misFavoritas.length > 0) {
-                mensaje += "Mis frases favoritas fueron estas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n");
-            } else {
-                mensaje += "¡Me encantaron todas las frases! 💜";
-            }
-            window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent(mensaje)}`, '_blank');
+            let favs = misFavoritas.length > 0 ? "Mis favoritas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n") : "¡Me encantó todo! 💜";
+            const url = `https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡Terminé el jardín!\n\n" + favs)}`;
+            window.open(url, '_blank');
         }
 
-        for (let i = 0; i < totalGirasoles; i++) { createSunflower(); }
+        for (let i = 0; i < totalGirasoles; i++) createSunflower();
     </script>
 </body>
 </html>
