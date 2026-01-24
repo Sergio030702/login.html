@@ -21,7 +21,7 @@
             touch-action: none;
         }
 
-        /* POLVO DE ESTRELLAS */
+        /* FONDO MÁGICO */
         .star {
             position: absolute;
             background: white;
@@ -65,7 +65,7 @@
 
         .heart { color: var(--rosa); font-size: 14px; animation: latido 1s infinite; }
 
-        /* MODAL DE FRASES */
+        /* VENTANA DE FRASES (MODAL) */
         #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10, 0, 20, 0.9); display: none;
@@ -83,7 +83,25 @@
 
         .modal-content.show { transform: scale(1); }
 
-        /* PANTALLA FINAL */
+        .fav-btn {
+            margin-top: 15px;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .fav-btn.selected {
+            background: var(--rosa);
+            border-color: var(--rosa);
+            transform: scale(1.05);
+        }
+
+        /* PANTALLA DE CIERRE */
         #final-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--morado); display: none; flex-direction: column;
@@ -110,10 +128,11 @@
     <div id="stars-container"></div>
     <div id="garden"></div>
 
-    <div id="modal" onclick="closeModal()">
+    <div id="modal">
         <div class="modal-content" id="mContent">
-            <div id="phraseText" style="font-size: 1.3rem; font-style: italic; line-height: 1.5;"></div>
-            <div style="margin-top:25px; font-size: 0.8rem; color: var(--amarillo); letter-spacing: 2px; font-family: sans-serif;">CONTINUAR ➔</div>
+            <div id="phraseText" style="font-size: 1.2rem; font-style: italic; line-height: 1.6; margin-bottom: 15px;"></div>
+            <button id="btnFav" class="fav-btn" onclick="addToFavorites(event)">Me encanta esta frase ❤️</button>
+            <div style="margin-top:25px; font-size: 0.8rem; color: var(--amarillo); letter-spacing: 2px; font-family: sans-serif; cursor: pointer;" onclick="closeModal()">CONTINUAR ➔</div>
         </div>
     </div>
 
@@ -124,136 +143,145 @@
             <div class="center" style="width: 45px; height: 45px;"><div class="heart" style="font-size: 18px;">♥</div></div>
         </div>
         <h1 style="color: var(--amarillo); margin: 0; font-size: 1.8rem;">¡Jardín Completado! 🌻</h1>
-        <p style="padding: 20px 40px; opacity: 0.8; line-height: 1.5;">Cada flor era un pensamiento,<br>pero mi favorita siempre serás tú.</p>
-        
+        <p id="final-desc" style="padding: 20px 40px; opacity: 0.8; line-height: 1.5;">Cada flor era un pensamiento,<br>pero mi favorita siempre serás tú.</p>
         <button onclick="enviarWhatsApp()" class="btn-whatsapp">Díselo por WhatsApp 📱</button>
     </div>
 
     <script>
+        // --- CONFIGURACIÓN ---
+        const miNumero = "56259361"; // Reemplaza con tu número
+        const totalGirasoles = 15;
         
-    // 1. CONFIGURACIÓN (Pon tu número aquí)
-    const miNumero = "56259361"; 
-    const totalGirasoles = 15;
-    
-    // 2. LISTA DE FRASES (20 frases únicas)
-    let phrases = [
-        "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
-        "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
-        "Si te quiero es porque sos mi amor, mi cómplice y todo. (Benedetti) 🌻",
-        "En un beso, sabrás todo lo que he callado. (Pablo Neruda) 💋",
-        "Tú eres la respuesta que nunca busqué, pero que siempre necesité. ✨",
-        "Mi táctica es mirarte, aprender como sos, quererte como sos. (Benedetti) 💎",
-        "Ven a dormir conmigo: no haremos el amor, él nos hará a nosotros. (Cortázar) 🌙",
-        "Para mi corazón basta tu pecho, para tu libertad bastan mis alas. (Neruda) 🦋",
-        "Si el girasol busca el sol, mi alma solo sabe buscar tu luz. ☀️",
-        "Te quiero para volvernos locos de risa, ebrios de nada. (Cortázar) 🍷",
-        "Amo tus pies porque anduvieron sobre la tierra hasta encontrarme. (Neruda) 👣",
-        "Tú eres mi momento favorito de todos los días. 💜",
-        "Hay besos que en los labios dejan huellas de un sol frío. (Gabriela Mistral) ❄️",
-        "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
-        "Usted es la mujer por la que mi corazón late en verso. ✍️",
-        "La magia no es un truco, la magia es que existas tú. 🎩✨",
-        "Espero curarme de ti en unos días. Debo dejar de fumarte. (Sabines) 🚬",
-        "No te cambio por nadie, porque nadie tiene tu forma de mirar. 👁️‍🗨️",
-        "Nacimos para encontrarnos, mi vida es un jardín desde que estás tú. 🌸",
-        "Queda prohibido no sonreír a los problemas. (Neruda) ☀️"
-    ];
+        let phrases = [
+            "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
+            "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
+            "Si te quiero es porque sos mi amor, mi cómplice y todo. (Benedetti) 🌻",
+            "En un beso, sabrás todo lo que he callado. (Pablo Neruda) 💋",
+            "Tú eres la respuesta que nunca busqué, pero que siempre necesité. ✨",
+            "Mi táctica es mirarte, aprender como sos, quererte como sos. (Benedetti) 💎",
+            "Ven a dormir conmigo: no haremos el amor, él nos hará a nosotros. (Cortázar) 🌙",
+            "Para mi corazón basta tu pecho, para tu libertad bastan mis alas. (Neruda) 🦋",
+            "Si el girasol busca el sol, mi alma solo sabe buscar tu luz. ☀️",
+            "Te quiero para volvernos locos de risa, ebrios de nada. (Cortázar) 🍷",
+            "Amo tus pies porque anduvieron sobre la tierra hasta encontrarme. (Neruda) 👣",
+            "Tú eres mi momento favorito de todos los días. 💜",
+            "Hay besos que en los labios dejan huellas de un sol frío. (Gabriela Mistral) ❄️",
+            "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
+            "Usted es la mujer por la que mi corazón late en verso. ✍️",
+            "La magia no es un truco, la magia es que existas tú. 🎩✨",
+            "Espero curarme de ti en unos días. (Sabines) 🚬",
+            "No te cambio por nadie, porque nadie tiene tu forma de mirar. 👁️‍🗨️",
+            "Nacimos para encontrarnos, mi vida es un jardín desde que estás tú. 🌸",
+            "Queda prohibido no sonreír a los problemas. (Neruda) ☀️"
+        ];
 
-    // 3. LÓGICA DE MEZCLA (Shuffle) - Esto evita las repeticiones
-    phrases.sort(() => Math.random() - 0.5);
+        // Barajar frases
+        phrases.sort(() => Math.random() - 0.5);
 
-    let eliminados = 0;
+        let eliminados = 0;
+        let misFavoritas = [];
 
-    // 4. GENERAR ESTRELLAS DE FONDO
-    const starsContainer = document.getElementById('stars-container');
-    for (let i = 0; i < 50; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        const size = Math.random() * 3 + 'px';
-        star.style.width = size; star.style.height = size;
-        star.style.left = Math.random() * 100 + 'vw';
-        star.style.top = Math.random() * 100 + 'vh';
-        star.style.animationDuration = Math.random() * 5 + 5 + 's';
-        starsContainer.appendChild(star);
-    }
-
-    // 5. FUNCIÓN PARA CREAR GIRASOLES
-    function createSunflower() {
-        const garden = document.getElementById('garden');
-        const sf = document.createElement('div');
-        sf.className = 'sunflower';
-        sf.style.left = Math.random() * 80 + 5 + 'vw';
-        sf.style.top = Math.random() * 80 + 5 + 'vh';
-
-        const ring = document.createElement('div');
-        ring.className = 'ring';
-        sf.appendChild(ring);
-
-        for (let i = 0; i < 12; i++) {
-            const p = document.createElement('div');
-            p.className = 'petal';
-            p.style.transform = `rotate(${i * 30}deg)`;
-            sf.appendChild(p);
+        // Crear Estrellas
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = star.style.height = Math.random() * 3 + 'px';
+            star.style.left = Math.random() * 100 + 'vw';
+            star.style.top = Math.random() * 100 + 'vh';
+            star.style.animationDuration = Math.random() * 5 + 5 + 's';
+            starsContainer.appendChild(star);
         }
 
-        const center = document.createElement('div');
-        center.className = 'center';
-        center.innerHTML = '<div class="heart">♥</div>';
-        sf.appendChild(center);
+        function createSunflower() {
+            const garden = document.getElementById('garden');
+            const sf = document.createElement('div');
+            sf.className = 'sunflower';
+            sf.style.left = Math.random() * 80 + 5 + 'vw';
+            sf.style.top = Math.random() * 80 + 5 + 'vh';
 
-        sf.onclick = (e) => {
-            e.stopPropagation();
-            ring.style.borderColor = "var(--morado)";
-            sf.style.opacity = '0';
-            sf.style.transform = 'scale(2)';
-            setTimeout(() => {
-                sf.remove();
-                showModal();
-            }, 400);
-        };
-        garden.appendChild(sf);
-    }
+            const ring = document.createElement('div');
+            ring.className = 'ring';
+            sf.appendChild(ring);
 
-    // 6. MOSTRAR FRASE (Usa el índice 'eliminados' para no repetir)
-    function showModal() {
-        const modal = document.getElementById('modal');
-        const content = document.getElementById('mContent');
-        document.getElementById('phraseText').innerText = phrases[eliminados];
-        eliminados++; 
-        modal.style.display = 'flex';
-        setTimeout(() => content.classList.add('show'), 10);
-    }
-
-    function closeModal() {
-        document.getElementById('mContent').classList.remove('show');
-        setTimeout(() => {
-            document.getElementById('modal').style.display = 'none';
-            if (eliminados === totalGirasoles) {
-                showFinalScreen();
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.transform = `rotate(${i * 30}deg)`;
+                sf.appendChild(p);
             }
-        }, 300);
-    }
 
-    // 7. PANTALLA FINAL Y WHATSAPP
-    function showFinalScreen() {
-        const finalPetals = document.getElementById('final-petals');
-        for (let i = 0; i < 12; i++) {
-            const p = document.createElement('div');
-            p.className = 'petal';
-            p.style.transform = `rotate(${i * 30}deg)`;
-            finalPetals.appendChild(p);
+            const center = document.createElement('div');
+            center.className = 'center';
+            center.innerHTML = '<div class="heart">♥</div>';
+            sf.appendChild(center);
+
+            sf.onclick = (e) => {
+                e.stopPropagation();
+                ring.style.borderColor = "var(--morado)";
+                sf.style.opacity = '0';
+                sf.style.transform = 'scale(2)';
+                setTimeout(() => {
+                    sf.remove();
+                    showModal();
+                }, 400);
+            };
+            garden.appendChild(sf);
         }
-        document.getElementById('final-screen').style.display = 'flex';
-    }
 
-    function enviarWhatsApp() {
-        const mensaje = encodeURIComponent("¡Me encantó tu jardín! Gracias por los girasoles y las frases tan lindas... 💜 Déjame saber que frase te gustó más 🌻");
-        window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${mensaje}`, '_blank');
-    }
+        function showModal() {
+            const modal = document.getElementById('modal');
+            const btn = document.getElementById('btnFav');
+            btn.innerText = "Me encanta esta frase ❤️";
+            btn.classList.remove('selected');
+            
+            document.getElementById('phraseText').innerText = phrases[eliminados];
+            eliminados++; 
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('mContent').classList.add('show'), 10);
+        }
 
-    // INICIO
-    for (let i = 0; i < totalGirasoles; i++) { createSunflower(); }
+        function addToFavorites(e) {
+            e.stopPropagation();
+            const frase = document.getElementById('phraseText').innerText;
+            if(!misFavoritas.includes(frase)) misFavoritas.push(frase);
+            
+            const btn = document.getElementById('btnFav');
+            btn.innerText = "¡Guardada en favoritos! ✨";
+            btn.classList.add('selected');
+            setTimeout(closeModal, 800);
+        }
 
-          </script>
+        function closeModal() {
+            document.getElementById('mContent').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('modal').style.display = 'none';
+                if (eliminados === totalGirasoles) showFinalScreen();
+            }, 300);
+        }
+
+        function showFinalScreen() {
+            const finalPetals = document.getElementById('final-petals');
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.transform = `rotate(${i * 30}deg)`;
+                finalPetals.appendChild(p);
+            }
+            document.getElementById('final-screen').style.display = 'flex';
+        }
+
+        function enviarWhatsApp() {
+            let mensaje = "¡Terminé tu jardín de girasoles! 🌻\n\n";
+            if(misFavoritas.length > 0) {
+                mensaje += "Mis frases favoritas fueron estas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n");
+            } else {
+                mensaje += "¡Me encantaron todas las frases! 💜";
+            }
+            window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent(mensaje)}`, '_blank');
+        }
+
+        for (let i = 0; i < totalGirasoles; i++) { createSunflower(); }
+    </script>
 </body>
 </html>
