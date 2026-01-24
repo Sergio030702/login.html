@@ -30,24 +30,17 @@
             touch-action: none;
         }
 
-        /* FONDO Y ESTRELLAS */
         #stars-container {
-            position: absolute;
-            width: 110%; height: 110%;
-            top: -5%; left: -5%;
-            transition: transform 0.1s ease-out;
+            position: absolute; width: 110%; height: 110%;
+            top: -5%; left: -5%; transition: transform 0.1s ease-out;
             pointer-events: none;
         }
 
         .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: moveStars 15s linear infinite;
+            position: absolute; background: white; border-radius: 50%;
+            opacity: 0.5; animation: moveStars 15s linear infinite;
         }
 
-        /* CONTADOR */
         #contador {
             position: fixed; top: 20px; left: 20px;
             color: var(--amarillo); font-family: sans-serif;
@@ -60,24 +53,40 @@
 
         /* GIRASOL ESTÁNDAR */
         .sunflower {
-            position: absolute;
-            width: 100px; height: 100px;
-            cursor: pointer;
-            transition: opacity 0.4s, transform 0.4s;
+            position: absolute; width: 100px; height: 100px;
+            cursor: pointer; transition: opacity 0.4s, transform 0.4s;
             transform-style: preserve-3d;
             animation: flotar 4s ease-in-out infinite;
         }
 
-        /* GIRASOL DORADO (FINAL) */
+        /* GIRASOL DORADO MEJORADO */
         .golden-sunflower {
-            filter: drop-shadow(0 0 15px var(--oro));
+            z-index: 10;
+            filter: drop-shadow(0 0 25px var(--oro));
+            animation: emergenciaDorada 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards, 
+                       brilloAura 2s ease-in-out infinite 1.5s;
         }
+        
         .golden-sunflower .petal {
-            background: linear-gradient(to top, #ffcc00, var(--oro)) !important;
+            background: linear-gradient(to top, #ffcc00, #ffffff) !important;
+            height: 50px !important; /* Más largos */
+            width: 14px !important;
         }
+
         .golden-sunflower .ring {
-            border-color: white !important;
-            box-shadow: 0 0 20px white;
+            border: 3px solid white !important;
+            box-shadow: 0 0 30px white;
+        }
+
+        /* ANIMACIONES ESPECIALES */
+        @keyframes emergenciaDorada {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1.8) rotate(360deg); opacity: 1; }
+        }
+
+        @keyframes brilloAura {
+            0%, 100% { filter: drop-shadow(0 0 15px var(--oro)); }
+            50% { filter: drop-shadow(0 0 40px white); }
         }
 
         .ring {
@@ -130,7 +139,6 @@
 
         .fav-btn.selected { background: var(--rosa); border-color: var(--rosa); transform: scale(1.1); }
 
-        /* CIERRE */
         #final-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--morado); display: none; flex-direction: column;
@@ -171,10 +179,8 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN (Pon tu número aquí sin el +)
-        const miNumero = "TUNUMERO"; 
+        const miNumero = "56259361"; 
         const totalGirasoles = 15;
-        
         const popAudio = new Audio("https://www.soundjay.com/buttons/sounds/button-37a.mp3");
 
         let phrases = [
@@ -204,7 +210,6 @@
         let eliminados = 0;
         let misFavoritas = [];
 
-        // Estrellas
         const starsWrap = document.getElementById('stars-container');
         for (let i = 0; i < 50; i++) {
             const s = document.createElement('div');
@@ -216,10 +221,8 @@
             starsWrap.appendChild(s);
         }
 
-        // EFECTO MOVIMIENTO CELULAR
         window.addEventListener('deviceorientation', (event) => {
-            const x = event.beta;  
-            const y = event.gamma; 
+            const x = event.beta; const y = event.gamma; 
             starsWrap.style.transform = `translate(${y / 3}px, ${x / 3}px)`;
         });
 
@@ -229,22 +232,25 @@
             sf.className = 'sunflower' + (isLast ? ' golden-sunflower' : '');
             
             if (isLast) {
-                sf.style.left = 'calc(50vw - 50px)';
-                sf.style.top = 'calc(50vh - 50px)';
-                sf.style.transform = 'scale(1.4)';
+                sf.style.left = '50%';
+                sf.style.top = '50%';
             } else {
                 sf.style.left = Math.random() * 75 + 10 + 'vw';
                 sf.style.top = Math.random() * 75 + 10 + 'vh';
             }
 
-            sf.innerHTML = `<div class="ring"></div>${Array(12).fill('<div class="petal"></div>').join('')}<div class="center"><div class="heart">♥</div></div>`;
-            sf.querySelectorAll('.petal').forEach((p, i) => p.style.transform = `rotate(${i * 30}deg)`);
+            // El dorado tiene 16 pétalos para verse más frondoso
+            const numPetals = isLast ? 16 : 12;
+            sf.innerHTML = `<div class="ring"></div>${Array(numPetals).fill('<div class="petal"></div>').join('')}<div class="center"><div class="heart">♥</div></div>`;
+            
+            const degStep = 360 / numPetals;
+            sf.querySelectorAll('.petal').forEach((p, i) => p.style.transform = `rotate(${i * degStep}deg)`);
 
             sf.onclick = (e) => {
                 e.stopPropagation();
                 popAudio.play();
                 sf.style.opacity = '0';
-                sf.style.transform = isLast ? 'scale(4)' : 'scale(2.5)';
+                sf.style.transform = isLast ? 'translate(-50%, -50%) scale(6)' : 'scale(2.5)';
                 setTimeout(() => { 
                     sf.remove(); 
                     eliminados++;
@@ -278,7 +284,7 @@
             setTimeout(() => {
                 document.getElementById('modal').style.display = 'none';
                 if (eliminados === totalGirasoles - 1) {
-                    createSunflower(true); // Aparece el dorado
+                    createSunflower(true);
                 } else if (eliminados === totalGirasoles) {
                     document.getElementById('final-screen').style.display = 'flex';
                 }
@@ -291,7 +297,6 @@
             window.open(url, '_blank');
         }
 
-        // Iniciar con 14 normales
         for (let i = 0; i < totalGirasoles - 1; i++) createSunflower(false);
     </script>
 </body>
