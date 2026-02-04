@@ -178,7 +178,7 @@
         const miNumero = "56259361"; 
         const totalGirasoles = 15;
 
-        // NUEVA FUNCIÓN DE SONIDO DE CAMPANILLA (SIN ARCHIVOS EXTERNOS)
+        // FUNCIÓN DE AUDIO MODIFICADA: EFECTO "GOTA DE AGUA" (OPCIÓN 2)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playRomanticTink() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -187,21 +187,21 @@
             const gain = audioCtx.createGain();
             
             osc.type = 'sine';
-            // Tono agudo tipo cristal (Nota La5)
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            // Empieza agudo y baja rápido para simular el impacto del agua
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.2);
             
             gain.gain.setValueAtTime(0, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
             
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.8);
+            osc.stop(audioCtx.currentTime + 0.4);
 
-            if (navigator.vibrate) navigator.vibrate(20);
+            if (navigator.vibrate) navigator.vibrate(15); // Vibración más corta para que sea sutil
         }
 
         let phrases = [
@@ -318,7 +318,6 @@
             window.open(url, '_blank');
         }
 
-        // Lanzar los primeros 14 girasoles
         for (let i = 0; i < totalGirasoles - 1; i++) createSunflower(false);
     </script>
 </body>
