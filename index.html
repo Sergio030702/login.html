@@ -178,20 +178,30 @@
         const miNumero = "56259361"; 
         const totalGirasoles = 15;
 
-        // FUNCIÓN PARA GENERAR SONIDO ROMÁNTICO SUAVE
+        // NUEVA FUNCIÓN DE SONIDO DE CAMPANILLA (SIN ARCHIVOS EXTERNOS)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playRomanticTink() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
+            
             osc.type = 'sine';
+            // Tono agudo tipo cristal (Nota La5)
             osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+            
             osc.connect(gain);
             gain.connect(audioCtx.destination);
+            
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.8);
+
+            if (navigator.vibrate) navigator.vibrate(20);
         }
 
         let phrases = [
@@ -245,6 +255,7 @@
             if (isLast) {
                 sf.style.left = '50%';
                 sf.style.top = '50%';
+                sf.style.transform = 'translate(-50%, -50%)';
             } else {
                 sf.style.left = Math.random() * 75 + 10 + 'vw';
                 sf.style.top = Math.random() * 75 + 10 + 'vh';
@@ -258,13 +269,13 @@
 
             sf.onclick = (e) => {
                 e.stopPropagation();
-                playRomanticTink(); // Sonido suave
+                playRomanticTink(); 
                 sf.style.opacity = '0';
                 sf.style.transform = isLast ? 'translate(-50%, -50%) scale(6)' : 'scale(2.5)';
                 setTimeout(() => { 
                     sf.remove(); 
                     eliminados++;
-                    document.getElementById('count').innerText = eliminados;
+                    document.getElementById('count').innerText = Math.min(eliminados, totalGirasoles);
                     showModal(); 
                 }, 400);
             };
@@ -307,6 +318,7 @@
             window.open(url, '_blank');
         }
 
+        // Lanzar los primeros 14 girasoles
         for (let i = 0; i < totalGirasoles - 1; i++) createSunflower(false);
     </script>
 </body>
