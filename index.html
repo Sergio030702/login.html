@@ -30,15 +30,21 @@
             touch-action: none;
         }
 
+        /* Lienzo interactivo para el polvo de estrellas */
+        #trail-canvas {
+            position: fixed; top: 0; left: 0;
+            pointer-events: none; z-index: 5;
+        }
+
         #stars-container {
-            position: absolute; width: 110%; height: 110%;
-            top: -5%; left: -5%; transition: transform 0.1s ease-out;
+            position: absolute; width: 115%; height: 115%;
+            top: -7.5%; left: -7.5%; transition: transform 0.2s ease-out;
             pointer-events: none;
         }
 
         .star {
             position: absolute; background: white; border-radius: 50%;
-            opacity: 0.5; animation: moveStars 15s linear infinite;
+            opacity: 0.5; animation: blink 3s infinite;
         }
 
         #contador {
@@ -56,34 +62,21 @@
             cursor: pointer; transition: opacity 0.4s, transform 0.4s;
             transform-style: preserve-3d;
             animation: flotar 4s ease-in-out infinite;
+            z-index: 10;
         }
 
         .golden-sunflower {
-            z-index: 10;
+            z-index: 20;
             filter: drop-shadow(0 0 25px var(--oro));
             animation: emergenciaDorada 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards, 
                        brilloAura 2s ease-in-out infinite 1.5s;
         }
         
-        .golden-sunflower .petal {
-            background: linear-gradient(to top, #ffcc00, #ffffff) !important;
-            height: 50px !important;
-            width: 14px !important;
-        }
-
-        .golden-sunflower .ring {
-            border: 3px solid white !important;
-            box-shadow: 0 0 30px white;
-        }
+        .golden-sunflower .petal { background: linear-gradient(to top, #ffcc00, #ffffff) !important; height: 50px !important; width: 14px !important; }
 
         @keyframes emergenciaDorada {
             0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
             100% { transform: translate(-50%, -50%) scale(1.8) rotate(360deg); opacity: 1; }
-        }
-
-        @keyframes brilloAura {
-            0%, 100% { filter: drop-shadow(0 0 15px var(--oro)); }
-            50% { filter: drop-shadow(0 0 40px white); }
         }
 
         .ring {
@@ -96,7 +89,7 @@
         .petal {
             position: absolute; top: 50%; left: 50%;
             background: linear-gradient(to top, var(--naranja), var(--amarillo));
-            border-radius: 50% 50% 20% 20% / 80% 80% 20% 20%;
+            border-radius: 50% 50% 20% 20%;
             transform-origin: bottom center; width: 12px; height: 42px;
             margin-left: -6px; margin-top: -42px;
         }
@@ -142,20 +135,15 @@
             color: white; text-align: center;
         }
 
-        .btn-whatsapp {
-            background-color: #25d366; color: white; padding: 18px 35px;
-            border-radius: 50px; text-decoration: none; font-weight: bold;
-            font-family: sans-serif; margin-top: 30px; border: none;
-            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
-        }
-
-        @keyframes moveStars { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
         @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+        @keyframes brilloAura { 0%, 100% { filter: drop-shadow(0 0 15px var(--oro)); } 50% { filter: drop-shadow(0 0 40px white); } }
     </style>
 </head>
 <body>
 
+    <canvas id="trail-canvas"></canvas>
     <div id="contador">Pensamientos: <span id="count">0</span>/15</div>
     <div id="stars-container"></div>
     <div id="garden"></div>
@@ -170,40 +158,67 @@
 
     <div id="final-screen">
         <h1 style="color: var(--amarillo); font-size: 2rem;">¡Jardín Completo! 🌻</h1>
-        <p style="opacity: 0.8; padding: 0 30px;">Has recogido cada pensamiento que guardé para ti.</p>
-        <button onclick="enviarWhatsApp()" class="btn-whatsapp">Díselo por WhatsApp 📱</button>
+        <p style="opacity: 0.8; padding: 0 30px;">Cada pensamiento es un pétalo para ti.</p>
+        <button onclick="enviarWhatsApp()" style="background-color: #25d366; color: white; padding: 18px 35px; border-radius: 50px; border: none; font-weight: bold; margin-top: 30px;">Díselo por WhatsApp 📱</button>
     </div>
 
     <script>
         const miNumero = "56259361"; 
         const totalGirasoles = 15;
-
-        // FUNCIÓN DE AUDIO MODIFICADA: EFECTO "GOTA DE AGUA" (OPCIÓN 2)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // --- LÓGICA DE AUDIO (LATIDO SUAVE) ---
         function playRomanticTink() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
-            osc.type = 'sine';
-            // Empieza agudo y baja rápido para simular el impacto del agua
-            osc.frequency.setValueAtTime(1200, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.2);
-            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(220, audioCtx.currentTime);
             gain.gain.setValueAtTime(0, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-            
+            gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.4);
-
-            if (navigator.vibrate) navigator.vibrate(15); // Vibración más corta para que sea sutil
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         }
 
+        // --- LÓGICA INTERACTIVA (POLVO DE ESTRELLAS) ---
+        const canvas = document.getElementById('trail-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.color = `rgba(255, 219, 58, ${Math.random() * 0.5 + 0.5})`;
+            }
+            update() { this.x += this.speedX; this.y += this.speedY; if (this.size > 0.1) this.size -= 0.05; }
+            draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+        }
+
+        function handleInteract(x, y) {
+            for(let i=0; i<2; i++) particles.push(new Particle(x, y));
+            const moveX = (x - window.innerWidth/2) / 30;
+            const moveY = (y - window.innerHeight/2) / 30;
+            document.getElementById('stars-container').style.transform = `translate(${-moveX}px, ${-moveY}px)`;
+        }
+
+        window.addEventListener('mousemove', (e) => handleInteract(e.clientX, e.clientY));
+        window.addEventListener('touchmove', (e) => handleInteract(e.touches[0].clientX, e.touches[0].clientY));
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => { p.update(); p.draw(); if(p.size <= 0.1) particles.splice(i, 1); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- LÓGICA DE GIRASOLES Y MODAL ---
         let phrases = [
             "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
             "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
@@ -219,105 +234,74 @@
             "Tú eres mi momento favorito de todos los días. 💜",
             "Hay besos que en los labios dejan huellas de un sol frío. (Gabriela Mistral) ❄️",
             "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
-            "Usted es la mujer por la que mi corazón late en verso. ✍️",
-            "La magia no es un truco, la magia es que existas tú. 🎩✨",
-            "Espero curarme de ti en unos días. (Sabines) 🚬",
-            "No te cambio por nadie, porque nadie tiene tu forma de mirar. 👁️‍🗨️",
-            "Nacimos para encontrarnos, mi vida es un jardín desde que estás tú. 🌸",
-            "Queda prohibido no sonreír a los problemas. (Neruda) ☀️"
+            "Usted es la mujer por la que mi corazón late en verso. ✍️"
         ];
 
         phrases.sort(() => Math.random() - 0.5);
         let eliminados = 0;
         let misFavoritas = [];
 
-        const starsWrap = document.getElementById('stars-container');
-        for (let i = 0; i < 50; i++) {
-            const s = document.createElement('div');
-            s.className = 'star';
-            s.style.width = s.style.height = Math.random() * 3 + 'px';
-            s.style.left = Math.random() * 100 + '%';
-            s.style.top = Math.random() * 100 + '%';
-            s.style.animationDuration = Math.random() * 10 + 5 + 's';
-            starsWrap.appendChild(s);
-        }
-
-        window.addEventListener('deviceorientation', (event) => {
-            const x = event.beta; const y = event.gamma; 
-            starsWrap.style.transform = `translate(${y / 3}px, ${x / 3}px)`;
-        });
-
         function createSunflower(isLast = false) {
-            const garden = document.getElementById('garden');
             const sf = document.createElement('div');
             sf.className = 'sunflower' + (isLast ? ' golden-sunflower' : '');
-            
-            if (isLast) {
-                sf.style.left = '50%';
-                sf.style.top = '50%';
-                sf.style.transform = 'translate(-50%, -50%)';
-            } else {
-                sf.style.left = Math.random() * 75 + 10 + 'vw';
-                sf.style.top = Math.random() * 75 + 10 + 'vh';
-            }
+            sf.style.left = isLast ? '50%' : Math.random() * 75 + 10 + 'vw';
+            sf.style.top = isLast ? '50%' : Math.random() * 75 + 10 + 'vh';
+            if(isLast) sf.style.transform = 'translate(-50%, -50%)';
 
             const numPetals = isLast ? 16 : 12;
             sf.innerHTML = `<div class="ring"></div>${Array(numPetals).fill('<div class="petal"></div>').join('')}<div class="center"><div class="heart">♥</div></div>`;
-            
-            const degStep = 360 / numPetals;
-            sf.querySelectorAll('.petal').forEach((p, i) => p.style.transform = `rotate(${i * degStep}deg)`);
+            sf.querySelectorAll('.petal').forEach((p, i) => p.style.transform = `rotate(${i * (360/numPetals)}deg)`);
 
             sf.onclick = (e) => {
-                e.stopPropagation();
-                playRomanticTink(); 
-                sf.style.opacity = '0';
-                sf.style.transform = isLast ? 'translate(-50%, -50%) scale(6)' : 'scale(2.5)';
+                e.stopPropagation(); playRomanticTink();
+                sf.style.opacity = '0'; sf.style.transform = isLast ? 'translate(-50%, -50%) scale(6)' : 'scale(2.5)';
                 setTimeout(() => { 
-                    sf.remove(); 
-                    eliminados++;
+                    sf.remove(); eliminados++;
                     document.getElementById('count').innerText = Math.min(eliminados, totalGirasoles);
                     showModal(); 
                 }, 400);
             };
-            garden.appendChild(sf);
+            document.getElementById('garden').appendChild(sf);
         }
 
         function showModal() {
-            const btn = document.getElementById('btnFav');
-            btn.innerText = "Me Gusta ❤️";
-            btn.classList.remove('selected');
             document.getElementById('phraseText').innerText = phrases[eliminados - 1];
             document.getElementById('modal').style.display = 'flex';
+            document.getElementById('btnFav').classList.remove('selected');
+            document.getElementById('btnFav').innerText = "Me Gusta ❤️";
             setTimeout(() => document.getElementById('mContent').classList.add('show'), 10);
         }
 
-        function addToFavorites(e) {
-            e.stopPropagation();
+        function addToFavorites() {
             const txt = document.getElementById('phraseText').innerText;
             if(!misFavoritas.includes(txt)) misFavoritas.push(txt);
             document.getElementById('btnFav').innerText = "¡En tu colección! ✨";
             document.getElementById('btnFav').classList.add('selected');
-            setTimeout(closeModal, 700);
+            setTimeout(closeModal, 800);
         }
 
         function closeModal() {
             document.getElementById('mContent').classList.remove('show');
             setTimeout(() => {
                 document.getElementById('modal').style.display = 'none';
-                if (eliminados === totalGirasoles - 1) {
-                    createSunflower(true);
-                } else if (eliminados === totalGirasoles) {
-                    document.getElementById('final-screen').style.display = 'flex';
-                }
+                if (eliminados === totalGirasoles - 1) createSunflower(true);
+                else if (eliminados === totalGirasoles) document.getElementById('final-screen').style.display = 'flex';
             }, 300);
         }
 
         function enviarWhatsApp() {
-            let favs = misFavoritas.length > 0 ? "Mis frases favoritas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n") : "¡Me encantaron todas! 💜";
-            const url = `https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡He completado tu jardín!\n\n" + favs)}`;
-            window.open(url, '_blank');
+            let favs = misFavoritas.length > 0 ? "Mis frases favoritas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n") : "¡Me encantó todo! 💜";
+            window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡Completé tu jardín!\n\n" + favs)}`, '_blank');
         }
 
+        // Crear estrellas y girasoles iniciales
+        for (let i = 0; i < 60; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.width = s.style.height = Math.random() * 2 + 1 + 'px';
+            s.style.left = Math.random() * 100 + '%'; s.style.top = Math.random() * 100 + '%';
+            document.getElementById('stars-container').appendChild(s);
+        }
         for (let i = 0; i < totalGirasoles - 1; i++) createSunflower(false);
     </script>
 </body>
