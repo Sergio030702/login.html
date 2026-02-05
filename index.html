@@ -30,7 +30,6 @@
             touch-action: none;
         }
 
-        /* Lienzo interactivo para el polvo de estrellas */
         #trail-canvas {
             position: fixed; top: 0; left: 0;
             pointer-events: none; z-index: 5;
@@ -59,7 +58,7 @@
 
         .sunflower {
             position: absolute; width: 100px; height: 100px;
-            cursor: pointer; transition: opacity 0.4s, transform 0.4s;
+            cursor: pointer; transition: opacity 0.3s, transform 0.3s;
             transform-style: preserve-3d;
             animation: flotar 4s ease-in-out infinite;
             z-index: 10;
@@ -72,8 +71,6 @@
                        brilloAura 2s ease-in-out infinite 1.5s;
         }
         
-        .golden-sunflower .petal { background: linear-gradient(to top, #ffcc00, #ffffff) !important; height: 50px !important; width: 14px !important; }
-
         @keyframes emergenciaDorada {
             0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
             100% { transform: translate(-50%, -50%) scale(1.8) rotate(360deg); opacity: 1; }
@@ -92,6 +89,7 @@
             border-radius: 50% 50% 20% 20%;
             transform-origin: bottom center; width: 12px; height: 42px;
             margin-left: -6px; margin-top: -42px;
+            transition: transform 0.6s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.6s;
         }
 
         .center {
@@ -167,7 +165,6 @@
         const totalGirasoles = 15;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        // --- LÓGICA DE AUDIO (LATIDO SUAVE) ---
         function playRomanticTink() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
@@ -182,7 +179,7 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         }
 
-        // --- LÓGICA INTERACTIVA (POLVO DE ESTRELLAS) ---
+        // --- POLVO DE ESTRELLAS ---
         const canvas = document.getElementById('trail-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -203,8 +200,8 @@
 
         function handleInteract(x, y) {
             for(let i=0; i<2; i++) particles.push(new Particle(x, y));
-            const moveX = (x - window.innerWidth/2) / 30;
-            const moveY = (y - window.innerHeight/2) / 30;
+            const moveX = (x - window.innerWidth/2) / 35;
+            const moveY = (y - window.innerHeight/2) / 35;
             document.getElementById('stars-container').style.transform = `translate(${-moveX}px, ${-moveY}px)`;
         }
 
@@ -218,7 +215,7 @@
         }
         animate();
 
-        // --- LÓGICA DE GIRASOLES Y MODAL ---
+        // --- GIRASOLES CON EXPLOSIÓN MEJORADA ---
         let phrases = [
             "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
             "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
@@ -248,18 +245,33 @@
             sf.style.top = isLast ? '50%' : Math.random() * 75 + 10 + 'vh';
             if(isLast) sf.style.transform = 'translate(-50%, -50%)';
 
-            const numPetals = isLast ? 16 : 12;
+            const numPetals = isLast ? 18 : 12;
             sf.innerHTML = `<div class="ring"></div>${Array(numPetals).fill('<div class="petal"></div>').join('')}<div class="center"><div class="heart">♥</div></div>`;
-            sf.querySelectorAll('.petal').forEach((p, i) => p.style.transform = `rotate(${i * (360/numPetals)}deg)`);
+            
+            const petals = sf.querySelectorAll('.petal');
+            petals.forEach((p, i) => p.style.transform = `rotate(${i * (360/numPetals)}deg)`);
 
             sf.onclick = (e) => {
-                e.stopPropagation(); playRomanticTink();
-                sf.style.opacity = '0'; sf.style.transform = isLast ? 'translate(-50%, -50%) scale(6)' : 'scale(2.5)';
+                e.stopPropagation(); 
+                playRomanticTink();
+                
+                // --- EFECTO DE EXPLOSIÓN 💥 ---
+                petals.forEach((p, i) => {
+                    const angle = i * (360/numPetals);
+                    const dist = isLast ? 350 : 200; // Distancia de explosión
+                    p.style.transform = `rotate(${angle}deg) translateY(-${dist}px) scale(0)`;
+                    p.style.opacity = '0';
+                });
+                sf.querySelector('.center').style.transform = 'translate(-50%, -50%) scale(0)';
+                sf.querySelector('.ring').style.transform = 'translate(-50%, -50%) scale(2)';
+                sf.querySelector('.ring').style.opacity = '0';
+
                 setTimeout(() => { 
-                    sf.remove(); eliminados++;
+                    sf.remove(); 
+                    eliminados++;
                     document.getElementById('count').innerText = Math.min(eliminados, totalGirasoles);
                     showModal(); 
-                }, 400);
+                }, 650); // Tiempo para ver la explosión antes del modal
             };
             document.getElementById('garden').appendChild(sf);
         }
@@ -269,7 +281,7 @@
             document.getElementById('modal').style.display = 'flex';
             document.getElementById('btnFav').classList.remove('selected');
             document.getElementById('btnFav').innerText = "Me Gusta ❤️";
-            setTimeout(() => document.getElementById('mContent').classList.add('show'), 10);
+            setTimeout(() => document.getElementById('mContent').classList.add('show'), 50);
         }
 
         function addToFavorites() {
@@ -294,7 +306,6 @@
             window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡Completé tu jardín!\n\n" + favs)}`, '_blank');
         }
 
-        // Crear estrellas y girasoles iniciales
         for (let i = 0; i < 60; i++) {
             const s = document.createElement('div');
             s.className = 'star';
