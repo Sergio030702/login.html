@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jardín Eterno 💜</title>
+    
+    <title>Jardín Eterno de Girasoles 🌻</title>
+    <meta name="description" content="Un jardín digital interactivo lleno de girasoles y pensamientos especiales. Recoge cada flor para descubrir un mensaje.">
+    <meta name="keywords" content="girasoles, jardín digital, regalo interactivo, pensamientos, amor, flores digitales">
+    <meta name="author" content="Tu Nombre">
+
+    <meta property="og:title" content="Jardín Eterno 💜">
+    <meta property="og:description" content="Tengo algo especial para ti en este jardín. ¿Me ayudas a recoger las flores?">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://fonts.gstatic.com/s/i/short-term/release/googlestars/sunflower/default/32px.svg">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌻</text></svg>">
+
     <style>
         :root {
             --morado: #1a0026;
@@ -44,17 +56,11 @@
 
         .sunflower {
             position: absolute; width: 100px; height: 100px;
-            cursor: pointer; 
-            /* Transición suave para cuando el dedo se aleja */
-            transition: transform 0.3s ease-out, opacity 0.4s;
+            cursor: pointer; transition: transform 0.3s ease-out, opacity 0.4s;
             transform-style: preserve-3d; z-index: 10;
         }
 
-        /* El efecto de flotar ahora se aplica a una capa interna para no chocar con el movimiento del dedo */
-        .sunflower-inner {
-            width: 100%; height: 100%;
-            animation: flotar 4s ease-in-out infinite;
-        }
+        .sunflower-inner { width: 100%; height: 100%; animation: flotar 4s ease-in-out infinite; }
 
         .golden-sunflower {
             z-index: 20; filter: drop-shadow(0 0 25px var(--oro));
@@ -166,7 +172,6 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         }
 
-        // GIROSCOPIO
         window.addEventListener('deviceorientation', (event) => {
             const x = event.beta; const y = event.gamma;
             if (x !== null && y !== null) {
@@ -175,35 +180,27 @@
             }
         });
 
-        // LÓGICA DE INTERACCIÓN (DEDO Y PROXIMIDAD)
         const canvas = document.getElementById('trail-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
         function handleInteract(x, y) {
-            // Partículas
             for(let i=0; i<2; i++) particles.push(new Particle(x, y));
-            
-            // Movimiento del fondo
             const bgMoveX = (x - window.innerWidth/2) / 40;
             const bgMoveY = (y - window.innerHeight/2) / 40;
             document.getElementById('stars-container').style.transform = `translate(${-bgMoveX}px, ${-bgMoveY}px)`;
 
-            // NUEVO: Reacción de los girasoles por proximidad
             document.querySelectorAll('.sunflower').forEach(sf => {
                 const rect = sf.getBoundingClientRect();
                 const sfX = rect.left + rect.width / 2;
                 const sfY = rect.top + rect.height / 2;
                 const dist = Math.hypot(x - sfX, y - sfY);
-
-                if (dist < 180) { // Si el dedo está a menos de 180px
+                if (dist < 180) {
                     const angle = Math.atan2(y - sfY, x - sfX) * (180 / Math.PI);
-                    const power = (180 - dist) / 6; // Qué tanto se mueve
-                    // Se inclina hacia el dedo y se desplaza un poquito
                     sf.style.transform = `translate(${(x - sfX)/10}px, ${(y - sfY)/10}px) rotate(${angle + 90}deg) scale(1.1)`;
                 } else {
-                    sf.style.transform = `rotate(0deg) scale(1)`; // Vuelve a su sitio
+                    sf.style.transform = `rotate(0deg) scale(1)`;
                 }
             });
         }
@@ -230,7 +227,6 @@
         }
         animate();
 
-        // LÓGICA DE FRASES Y GIRASOLES
         let phrases = [
             "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
             "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
@@ -261,7 +257,6 @@
             if(isLast) sf.style.transform = 'translate(-50%, -50%)';
 
             const numPetals = isLast ? 18 : 12;
-            // Estructura interna para no perder el flotado
             sf.innerHTML = `
                 <div class="sunflower-inner">
                     <div class="ring"></div>
@@ -284,8 +279,7 @@
                 sf.querySelector('.ring').style.opacity = '0';
 
                 setTimeout(() => { 
-                    sf.remove(); 
-                    eliminados++;
+                    sf.remove(); eliminados++;
                     document.getElementById('count').innerText = eliminados + "/" + totalGirasoles;
                     showModal(); 
                 }, 650);
@@ -326,7 +320,6 @@
             window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡He completado tu jardín Eterno!\n\n" + favs)}`, '_blank');
         }
 
-        // Estrellas
         for (let i = 0; i < 70; i++) {
             const s = document.createElement('div');
             s.className = 'star';
