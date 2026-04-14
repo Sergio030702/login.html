@@ -5,25 +5,24 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# --- CONFIGURACIÓN ---
+# Recuperamos la clave de Vercel
 API_KEY = os.environ.get("GEMINI_API_KEY")
 
-def obtener_resultados_reales():
-    """Extrae los últimos terminales de la Lotería de Florida."""
+def obtener_datos_florida():
     try:
         url = "https://www.loteriasflorida.com/resultados-pasados-pick-3"
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        res = requests.get(url, headers=headers, timeout=10)
+        res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
         tables = pd.read_html(res.text)
         df = tables[0]
         terminales = []
-        for col_idx in [1, 2]:
-            for val in df.iloc[:, col_idx].dropna().head(10):
-                num_limpio = str(int(float(val)))
-                terminales.append(num_limpio[-2:].zfill(2))
+        # Mediodía y Noche
+        for col in [1, 2]:
+            for val in df.iloc[:, col].dropna().head(10):
+                n = str(int(float(val)))
+                terminales.append(n[-2:].zfill(2))
         return terminales
     except:
-        return ["00", "11", "22", "33"]
+        return ["No se pudo leer la web de Florida"]
 
 @app.route('/')
 def home():
@@ -32,36 +31,35 @@ def home():
 @app.route('/api/predecir')
 def predecir():
     if not API_KEY:
-        return jsonify({"respuesta": "Error: No hay API KEY en Vercel."})
+        return jsonify({"respuesta": "Error: Falta la API_KEY en Vercel."})
 
-    datos = obtener_resultados_reales()
+    resultados = obtener_datos_florida()
     
-    # URL Directa de Google AI (Versión estable v1)
-    # Esto evita el error 404 de la librería
-    url_google = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    # FORZAMOS LA URL A LA VERSIÓN 1 ESTABLE (v1)
+    # Esto elimina el error de 'v1beta'
+    endpoint = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
     
     payload = {
         "contents": [{
             "parts": [{
-                "text": f"Eres experto en Bolita Cubana. Analiza estos terminales: {datos}. Dame 5 números probables (00-99) con su razón según la Charada. Resalta los números en negrita."
+                "text": f"Analiza estos terminales de la bolita: {resultados}. Dame 5 números probables (00-99) usando la Charada Cubana. Pon los números en negrita."
             }]
         }]
     }
 
     try:
-        response = requests.post(url_google, json=payload, timeout=15)
-        res_json = response.json()
-        
-        # Extraer el texto de la respuesta de Google
-        if "candidates" in res_json:
-            texto_ia = res_json["candidates"][0]["content"]["parts"][0]["text"]
-            return jsonify({"respuesta": texto_ia})
-        else:
-            # Si Google devuelve un error, lo mostramos claro
-            error_google = res_json.get("error", {}).get("message", "Error desconocido")
-            return jsonify({"respuesta": f"Google dice: {error_google}"})
-            
-    except Exception as e:
-        return jsonify({"respuesta": f"Fallo de conexión: {str(e)}"})
+        response = requests.post(endpoint, json=payload, timeout=20)
+        data = response.json()
 
+        if "candidates" in data:
+            texto = data["candidates"][0]["content"]["parts"][0]["text"]
+            return jsonify({"respuesta": texto})
+        else:
+            # Si Google da error, lo mostramos directo
+            msg = data.get("error", {}).get("message", "Error desconocido")
+            return jsonify({"respuesta": f"Google responde: {msg}"})
+    except Exception as e:
+        return jsonify({"respuesta": f"Error de conexión: {str(e)}"})
+
+# Para Vercel
 app.debug = False
