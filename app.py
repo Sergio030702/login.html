@@ -6,7 +6,8 @@ import requests
 app = Flask(__name__)
 
 # 1. Usamos la API Key que proporcionaste
-genai.configure(api_key="AIzaSyASJ1odza9Q_O-s_u-8hgkfM16csZHRhoM")
+api_key_sistema = os.environ.get("GEMINI_API_KEY")
+genai.configure(api_key=api_key_sistema)
 
 # 2. Cambiamos a la versión 'latest' que es más estable para la API gratuita
 model = genai.GenerativeModel('gemini-1.5-flash-latest')
