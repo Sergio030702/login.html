@@ -7,14 +7,13 @@ import requests
 app = Flask(__name__)
 
 # --- CONFIGURACIÓN DE SEGURIDAD ---
-# El código busca la llave que configuraste en Vercel
+# Lee la llave desde las variables de entorno de Vercel
 api_key_sistema = os.environ.get("GEMINI_API_KEY")
 
 if api_key_sistema:
     genai.configure(api_key=api_key_sistema)
-    model = genai.GenerativeModel('gemini-1.5-flash')
 else:
-    print("ERROR: No se encontró la variable GEMINI_API_KEY en el sistema.")
+    print("ALERTA: Variable GEMINI_API_KEY no detectada.")
 
 def obtener_resultados_reales():
     """Extrae los últimos terminales de la Lotería de Florida."""
@@ -23,15 +22,15 @@ def obtener_resultados_reales():
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         res = requests.get(url, headers=headers, timeout=10)
         
-        # Leemos la tabla de resultados
+        # Procesamiento de la tabla
         tables = pd.read_html(res.text)
         df = tables[0]
         
         terminales = []
-        # Tomamos datos de las columnas Mediodía (1) y Noche (2)
+        # Columnas 1 (Mediodía) y 2 (Noche)
         for col_idx in [1, 2]:
             for val in df.iloc[:, col_idx].dropna().head(10):
-                # Limpieza de datos (por si vienen como 23.0)
+                # Limpieza: Convertir a número entero y luego a texto de 2 dígitos
                 num_limpio = str(int(float(val)))
                 terminales.append(num_limpio[-2:].zfill(2))
             
@@ -45,9 +44,8 @@ def home():
 
 @app.route('/api/predecir')
 def predecir():
-    # Verificación de seguridad por si la API KEY falta
     if not api_key_sistema:
-        return jsonify({"respuesta": "Error: La API Key no está configurada en Vercel."})
+        return jsonify({"respuesta": "Error: GEMINI_API_KEY no configurada en Vercel."})
 
     datos_recientes = obtener_resultados_reales()
     
@@ -56,19 +54,29 @@ def predecir():
     Analiza estos terminales recientes de Florida Pick 3: {datos_recientes}.
     
     TAREA:
-    1. Busca patrones repetitivos y relación con la mística de la Charada.
-    2. Proporciona los 5 números más probables (00-99).
+    1. Identifica patrones, repeticiones y lógica de la Charada.
+    2. Sugiere los 5 números más probables (00-99).
     3. Explica brevemente la razón de cada uno.
     
-    IMPORTANTE: Pon los números finales en negrita.
+    IMPORTANTE: Resalta los números finales en negrita.
     """
     
+    # --- LÓGICA DE INTENTOS (SOLUCIÓN AL ERROR 404) ---
     try:
+        # Intento A: Modelo Flash (Más rápido y moderno)
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         return jsonify({"respuesta": response.text})
+    
     except Exception as e:
-        # Esto te ayudará a diagnosticar si Google bloquea la petición
-        return jsonify({"respuesta": f"Error en la consulta: {str(e)}"})
+        # Intento B: Si el anterior falla (404), usamos el modelo Pro (Más estable)
+        try:
+            model_alt = genai.GenerativeModel('gemini-pro')
+            response = model_alt.generate_content(prompt)
+            return jsonify({"respuesta": response.text})
+        except Exception as e2:
+            # Si ambos fallan, devolvemos el error detallado para diagnóstico
+            return jsonify({"respuesta": f"Error de modelos de Google: {str(e)}"})
 
-# Configuración obligatoria para despliegue en Vercel
+# Configuración necesaria para Vercel
 app.debug = False
