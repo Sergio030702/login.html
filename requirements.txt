@@ -1,5 +1,4 @@
 Flask
-google-generativeai
 pandas
 requests
 lxml
