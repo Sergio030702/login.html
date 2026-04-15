@@ -1,25 +1,22 @@
 import os
-import requests
+import requests  # Para llamar a la web de Florida y Groq
 import re
 import redis
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request # Para manejar la petición del usuario
 from charada_data import CHARADA
 
 app = Flask(__name__)
 
-# 1. CONEXIÓN A REDIS LABS
-# Vercel leerá la URL que pusiste en las variables de entorno
+# Configuración
 REDIS_URL = os.environ.get("loteria_db_REDIS_URL")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 try:
     if REDIS_URL:
-        # Usamos decode_responses=True para manejar texto directo
         r = redis.Redis.from_url(REDIS_URL, decode_responses=True, socket_timeout=5)
     else:
         r = None
-except Exception as e:
-    print(f"Error al conectar con Redis: {e}")
+except Exception:
     r = None
 
 def obtener_datos_web():
@@ -40,41 +37,32 @@ def home():
 def predecir():
     vivos = obtener_datos_web()
     
-    # Intentar guardar historial
+    # Guardado en Redis
     if r and vivos:
         try:
             noche, dia = vivos[0], vivos[1]
             r.lpush("historial_bolita", dia, noche)
             r.ltrim("historial_bolita", 0, 99)
-        except Exception as e:
-            print(f"No se pudo guardar en Redis: {e}")
+        except:
+            pass
 
-    # Si es el Cron Job (actualización automática)
-    if "x-vercel-cron" in requests.headers:
-        return jsonify({"status": "Actualización completada"}), 200
+    # --- CORRECCIÓN AQUÍ ---
+    # Usamos 'request' (el de Flask) no 'requests' (la librería)
+    if request.headers.get("x-vercel-cron"):
+        return jsonify({"status": "Actualizado correctamente"}), 200
+    # -----------------------
 
-    # Si la web falla por completo
     if not vivos:
-        return jsonify({"respuesta": "❌ Error al obtener resultados de Florida."})
+        return jsonify({"respuesta": "❌ Error al obtener resultados."})
 
-    # Preparar el análisis
     ultimo = vivos[0]
-    significado = CHARADA.get(ultimo, "Significado variado")
+    significado = CHARADA.get(ultimo, "Varios significados")
     
-    prompt = f"""
-    Analista de Bolita Cubana. 
-    Resultado de hoy: {ultimo} ({significado}). 
-    Historial reciente: {vivos}.
-    
-    TAREA: 
-    1. Dame 5 pronósticos en **negrita**. 
-    2. Explica brevemente cada uno con la charada. 
-    3. Responde directo y profesional.
-    """
+    prompt = f"Analista de Bolita. Último: {ultimo} ({significado}). Historial: {vivos}. Dame 5 pronósticos en **negrita** con significados."
 
     try:
         if not GROQ_API_KEY:
-            return jsonify({"respuesta": "❌ Configura GROQ_API_KEY en Vercel."})
+            return jsonify({"respuesta": "❌ Falta API KEY en Vercel."})
 
         headers = {"Authorization": f"Bearer {GROQ_API_KEY.strip()}", "Content-Type": "application/json"}
         payload = {
@@ -83,10 +71,8 @@ def predecir():
             "temperature": 0.3
         }
         
-        response = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers, timeout=15)
         res_data = response.json()
         return jsonify({"respuesta": res_data["choices"][0]["message"]["content"]})
-    except Exception as e:
-        return jsonify({"respuesta": "❌ La IA tardó demasiado en responder. Prueba otra vez."})
-
-app.debug = False
+    except:
+        return jsonify({"respuesta": "❌ Error en la IA. Intenta de nuevo."})
