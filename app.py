@@ -7,27 +7,27 @@ from charada_data import CHARADA
 
 app = Flask(__name__)
 
-# --- CONFIGURACIÓN DE ENTORNO ---
-# Estas variables deben estar en Vercel -> Settings -> Environment Variables
+# --- CONFIGURACIÓN ---
 REDIS_URL = os.environ.get("loteria_db_REDIS_URL")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# Conexión Segura a Redis
 try:
     r = redis.Redis.from_url(REDIS_URL, decode_responses=True, socket_timeout=5) if REDIS_URL else None
 except:
     r = None
 
-def obtener_datos_florida():
-    """Scraping de resultados de Florida Pick 3"""
+def obtener_tripletas_florida():
+    """Extrae las tripletas completas (Fijo + Corridos)"""
     try:
         url = "https://www.lotteryusa.com/florida/pick-3/"
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         res = requests.get(url, headers=headers, timeout=10)
-        patron = re.findall(r'\d-\d-\d', res.text)
-        # Extraemos el terminal (ej: de 1-2-3 sacamos el '03')
-        return [c.split('-')[-1].zfill(2) for c in patron] if patron else []
-    except:
+        # Buscamos el formato X-X-X (ejemplo: 6-5-6)
+        matches = re.findall(r'(\d)-(\d)-(\d)', res.text)
+        # Retornamos las tripletas como strings: ["6-5-6", "1-0-1", ...]
+        return ["-".join(m) for m in matches] if matches else []
+    except Exception as e:
+        print(f"Error de conexión: {e}")
         return []
 
 @app.route('/')
@@ -36,98 +36,99 @@ def home():
 
 @app.route('/api/predecir')
 def predecir():
-    vivos = obtener_datos_florida()
+    tripletas = obtener_tripletas_florida()
     
-    # 1. ACTUALIZACIÓN DE HISTORIAL EN REDIS
-    if r and vivos:
+    # 1. GUARDADO AUTOMÁTICO EN REDIS
+    if r and tripletas:
         try:
-            # Guardamos los resultados actuales
-            r.lpush("historial_bolita", *vivos)
-            r.ltrim("historial_bolita", 0, 49) # Mantenemos los últimos 50 registros
-        except:
-            pass
+            # Guardamos las últimas 2 tripletas (Día y Noche)
+            # El asterisco *tripletas[:2] expande la lista para meter los dos elementos
+            r.lpush("historial_tripletas", *tripletas[:2])
+            # Mantenemos solo las últimas 100 tripletas para no saturar la DB
+            r.ltrim("historial_tripletas", 0, 99)
+        except Exception as e:
+            print(f"Error en Redis: {e}")
 
-    # 2. GESTIÓN DEL CRON (Solo para actualización automática)
+    # 2. RESPUESTA PARA EL CRON (Invisible para el usuario)
     if request.headers.get("x-vercel-cron"):
-        return jsonify({"status": "Base de datos sincronizada", "resultados": vivos}), 200
+        return jsonify({
+            "status": "💾 Historial actualizado automáticamente a medianoche",
+            "tripletas_guardadas": tripletas[:2]
+        }), 200
 
-    if not vivos:
-        return jsonify({"respuesta": "⚠️ La web de Florida no responde. Intenta de nuevo en unos segundos."})
+    if not tripletas:
+        return jsonify({"respuesta": "⚠️ La pizarra de Florida no está disponible ahora mismo."})
 
-    # 3. PREPARACIÓN DEL CONTEXTO PARA EL EXPERTO
-    ultimo = vivos[0]
-    significado_ultimo = CHARADA.get(ultimo, "Sin definir")
-    # Recuperamos los últimos 10 de Redis para que la IA vea el patrón
+    # 3. PREPARAR DATOS PARA EL ANALISTA
+    # Tomamos la tripleta más reciente (Noche)
+    ultima_raw = tripletas[0].split('-')
+    fijo = ultima_raw[-1]  # El terminal (Fijo)
+    corridos = ultima_raw[0:2]  # Los dos primeros
+    
+    # Recuperamos el historial completo de Redis para el análisis de patrones
     try:
-        historial_ia = r.lrange("historial_bolita", 0, 9) if r else vivos[:10]
+        historial_raw = r.lrange("historial_tripletas", 0, 19) if r else tripletas[:10]
     except:
-        historial_ia = vivos[:10]
+        historial_raw = tripletas[:10]
     
-    contexto_str = ", ".join(historial_ia)
+    historial_texto = " | ".join(historial_raw)
 
-    # 4. PROMPT DE INGENIERÍA V4.0 (EL BANQUERO VIEJO)
+    # 4. PROMPT MAESTRO V5.1 (TRIPLETA + MEMORIA ESTADÍSTICA)
     prompt_maestro = f"""
-    ESTRICTO PROTOCOLO DE ANÁLISIS DE BOLITA CUBANA - MODELO PREDICTIVO V4.0
+    SISTEMA DE INTELIGENCIA DE BANCA - PROTOCOLO DE ANÁLISIS INTEGRAL V5.1
 
-    PERFIL: Analista Jefe de Banca con 30 años de experiencia. Experto en Simetría Numérica y Ciclos de Atraso.
+    PERFIL: Analista Jefe con 30 años de calle. Experto en secuencias de Fijos y Corridos.
     
-    DATOS DE ENTRADA:
-    - ÚLTIMO FIJO: {ultimo} ({significado_ultimo})
-    - SECUENCIA RECIENTE: {contexto_str}
-    - MÉTODO: Detección de 'Bolas Sordas' y 'Números de Arrastre'.
+    DATOS DE LA JORNADA:
+    - ÚLTIMA TRIPLETA: {tripletas[0]}
+    - EL FIJO (Terminal): {fijo} ({CHARADA.get(fijo, 'Sin definir')})
+    - LOS CORRIDOS: {", ".join(corridos)}
+    - HISTORIAL DE PIZARRA (Últimas 20 tripletas): {historial_texto}
 
-    TAREA:
-    Proporciona 5 Jugadas Maestras basadas en la racha actual.
-    
-    FORMATO DE SALIDA:
-    ### 🎱 ANÁLISIS DE PIZARRA PROFESIONAL ###
+    TAREA TÉCNICA:
+    1. ANALIZA LOS CORRIDOS: Evalúa cómo los números {corridos} están 'empujando' al próximo fijo.
+    2. PATRONES DE REPETICIÓN: Basado en el historial {historial_texto}, detecta si hay números que salieron como corridos y ahora les toca ser fijo (vueltos).
+    3. DETECCIÓN DE BOLA SORDA: ¿Qué decena o terminal ha desaparecido de la pizarra en las últimas 20 tripletas?
+
+    ENTREGA:
+    Presenta 5 Jugadas Maestras con este formato:
+    ---
+    ### 🎱 PIZARRA DE ALTA PRECISIÓN ###
     
     1. **[Número]** - (Nombre en Charada)
-       - **Probabilidad:** [X]% 
-       - **Justificación:** (Breve análisis técnico de por qué este número es el 'vuelto' o compañero del {ultimo})
-
-    (Repetir para 5 números DIFERENTES)
+       - **Fuerza:** [X]% 
+       - **Justificación:** (Breve análisis técnico basado en la tripleta {tripletas[0]} y el historial).
 
     ---
-    **RESUMEN DEL EXPERTO:** [Una frase sobre la tendencia del día].
+    **COMENTARIO DE PASILLO:** (Dime el pálpito de la calle sobre qué número está 'caliente' hoy).
     """
 
-    # 5. LLAMADA SEGURA A GROQ API
+    # 5. LLAMADA A LA IA (GROQ)
     try:
         if not GROQ_API_KEY:
-            return jsonify({"respuesta": "❌ Error: Configura GROQ_API_KEY en Vercel."})
+            return jsonify({"respuesta": "❌ Configura GROQ_API_KEY en Vercel."})
 
-        headers_ai = {
-            "Authorization": f"Bearer {GROQ_API_KEY.strip()}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {"role": "system", "content": "Eres un experto banquero de lotería cubana. Tu tono es profesional y técnico."},
-                {"role": "user", "content": prompt_maestro}
-            ],
-            "temperature": 0.65,
-            "max_tokens": 1000
-        }
-        
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions", 
-            json=payload, 
-            headers=headers_ai, 
+            json={
+                "model": "llama-3.3-70b-versatile",
+                "messages": [
+                    {"role": "system", "content": "Eres el experto máximo en bolita cubana. No saludas, vas directo al análisis técnico de la pizarra."},
+                    {"role": "user", "content": prompt_maestro}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 1000
+            }, 
+            headers={"Authorization": f"Bearer {GROQ_API_KEY.strip()}"}, 
             timeout=25
         )
 
         res_data = response.json()
-
-        # Validación de respuesta para evitar error 'choices'
         if "choices" not in res_data:
             error_msg = res_data.get("error", {}).get("message", "Error desconocido")
-            return jsonify({"respuesta": f"❌ Error de Groq: {error_msg}"})
+            return jsonify({"respuesta": f"❌ Error de análisis: {error_msg}"})
 
-        prediccion = res_data["choices"][0]["message"]["content"]
-        return jsonify({"respuesta": prediccion})
+        return jsonify({"respuesta": res_data["choices"][0]["message"]["content"]})
 
     except Exception as e:
         return jsonify({"respuesta": f"❌ Error Crítico: {str(e)}"})
