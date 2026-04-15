@@ -2,21 +2,29 @@ import os
 import requests
 import re
 from flask import Flask, render_template, jsonify
-from collections import Counter
+from upstash_redis import Redis  # Usamos el cliente oficial para Python
 
 app = Flask(__name__)
 
+# Configuración de APIs
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-def obtener_historial_real():
+# Conexión automática a Redis usando las variables que Vercel ya te puso
+redis = Redis(
+    url=os.environ.get("KV_REST_API_URL"), 
+    token=os.environ.get("KV_REST_API_TOKEN")
+)
+
+def obtener_datos_web():
+    """Lee Florida Pick 3 de hoy."""
     try:
         url = "https://www.lotteryusa.com/florida/pick-3/"
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        headers = {'User-Agent': 'Mozilla/5.0'}
         res = requests.get(url, headers=headers, timeout=10)
         patron = re.findall(r'\d-\d-\d', res.text)
-        return [c.split('-')[-1].zfill(2) for c in patron] if patron else None
+        return [c.split('-')[-1].zfill(2) for c in patron] if patron else []
     except:
-        return None
+        return []
 
 @app.route('/')
 def home():
@@ -25,39 +33,51 @@ def home():
 @app.route('/api/predecir')
 def predecir():
     if not GROQ_API_KEY:
-        return jsonify({"respuesta": "❌ ERROR: Revisa la GROQ_API_KEY en Vercel."})
+        return jsonify({"respuesta": "❌ Falta GROQ_API_KEY"})
 
-    historial = obtener_historial_real()
-    if not historial:
-        historial = ["23", "45", "12", "89", "04"] # Seguridad
-
-    url_groq = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY.strip()}",
-        "Content-Type": "application/json"
-    }
+    # 1. Obtener números de la web
+    nuevos = obtener_datos_web()
     
-    # --- CAMBIO AQUÍ: Usamos el modelo actualizado Llama 3.1 ---
-    payload = {
-        "model": "llama-3.1-8b-instant", 
-        "messages": [
-            {"role": "system", "content": "Experto en estadística y Charada Cubana."},
-            {"role": "user", "content": f"Analiza estos números reales de Florida: {historial[:15]}. Dame 5 pronósticos de la Charada en negrita."}
-        ],
-        "temperature": 0.5
-    }
+    # 2. Gestionar la Memoria con Redis
+    try:
+        # Recuperamos el historial guardado (lo guarda como lista de strings)
+        historial = redis.lrange("historial_bolita", 0, 100) or []
+        
+        # Si hay números nuevos, los guardamos si no están ya en el tope
+        for n in reversed(nuevos):
+            if n not in historial[:2]:
+                redis.lpush("historial_bolita", n)
+                historial.insert(0, n)
+        
+        # Mantenemos solo los últimos 100 sorteos para análisis
+        redis.ltrim("historial_bolita", 0, 99)
+    except Exception as e:
+        print(f"Error Redis: {e}")
+        historial = nuevos if nuevos else ["12", "45", "89"] # Respaldo
+
+    # 3. La IA analiza el historial real acumulado
+    prompt = f"""
+    Eres un analista técnico de lotería con memoria histórica.
+    HISTORIAL REAL: {historial[:20]}
+    
+    TAREA:
+    1. Basado en que el último número fue {historial[0]}, ¿cuáles son los 5 números (00-99) con más probabilidad hoy?
+    2. Usa la Charada Cubana para dar el significado de cada uno.
+    3. Sé directo, usa **negrita** para los números y no filosofes.
+    """
 
     try:
-        response = requests.post(url_groq, headers=headers, json=payload, timeout=20)
-        
-        if response.status_code == 200:
-            res_data = response.json()
-            return jsonify({"respuesta": res_data["choices"][0]["message"]["content"]})
-        else:
-            error_info = response.json().get('error', {}).get('message', 'Error desconocido')
-            return jsonify({"respuesta": f"❌ Error de Groq: {error_info}"})
-
+        url_groq = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {"Authorization": f"Bearer {GROQ_API_KEY.strip()}", "Content-Type": "application/json"}
+        payload = {
+            "model": "llama-3.1-8b-instant",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+        response = requests.post(url_groq, json=payload, headers=headers)
+        res_data = response.json()
+        return jsonify({"respuesta": res_data["choices"][0]["message"]["content"]})
     except Exception as e:
-        return jsonify({"respuesta": f"❌ Error de sistema: {str(e)}"})
+        return jsonify({"respuesta": f"❌ Error: {str(e)}"})
 
 app.debug = False
