@@ -17,17 +17,16 @@ except:
     r = None
 
 def obtener_tripletas_florida():
-    """Extrae las tripletas completas (Fijo + Corridos)"""
+    """Trae los resultados reales de Florida Pick 3"""
     try:
         url = "https://www.lotteryusa.com/florida/pick-3/"
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         res = requests.get(url, headers=headers, timeout=10)
-        # Buscamos el formato X-X-X (ejemplo: 6-5-6)
+        # Busca el formato número-número-número
         matches = re.findall(r'(\d)-(\d)-(\d)', res.text)
-        # Retornamos las tripletas como strings: ["6-5-6", "1-0-1", ...]
+        # Devuelve las tripletas reales
         return ["-".join(m) for m in matches] if matches else []
-    except Exception as e:
-        print(f"Error de conexión: {e}")
+    except:
         return []
 
 @app.route('/')
@@ -38,86 +37,73 @@ def home():
 def predecir():
     tripletas = obtener_tripletas_florida()
     
-    # 1. GUARDADO AUTOMÁTICO EN REDIS
+    # 1. GUARDADO SILENCIOSO EN REDIS
     if r and tripletas:
         try:
-            # Guardamos las últimas 2 tripletas (Día y Noche)
-            # El asterisco *tripletas[:2] expande la lista para meter los dos elementos
             r.lpush("historial_tripletas", *tripletas[:2])
-            # Mantenemos solo las últimas 100 tripletas para no saturar la DB
             r.ltrim("historial_tripletas", 0, 99)
-        except Exception as e:
-            print(f"Error en Redis: {e}")
+        except:
+            pass
 
-    # 2. RESPUESTA PARA EL CRON (Invisible para el usuario)
+    # 2. RESPUESTA PARA EL CRON
     if request.headers.get("x-vercel-cron"):
-        return jsonify({
-            "status": "💾 Historial actualizado automáticamente a medianoche",
-            "tripletas_guardadas": tripletas[:2]
-        }), 200
+        return jsonify({"status": "Datos guardados"}), 200
 
     if not tripletas:
-        return jsonify({"respuesta": "⚠️ La pizarra de Florida no está disponible ahora mismo."})
+        return jsonify({"respuesta": "⚠️ No hay conexión con la pizarra de Florida."})
 
-    # 3. PREPARAR DATOS PARA EL ANALISTA
-    # Tomamos la tripleta más reciente (Noche)
-    ultima_raw = tripletas[0].split('-')
-    fijo = ultima_raw[-1]  # El terminal (Fijo)
-    corridos = ultima_raw[0:2]  # Los dos primeros
+    # 3. DATOS REALES PARA LA IA
+    ultima_tripleta = tripletas[0] # Ejemplo real: "6-5-6"
+    partes = ultima_tripleta.split('-')
+    fijo = partes[-1]
+    corridos = f"{partes[0]} y {partes[1]}"
     
-    # Recuperamos el historial completo de Redis para el análisis de patrones
     try:
-        historial_raw = r.lrange("historial_tripletas", 0, 19) if r else tripletas[:10]
+        historial = r.lrange("historial_tripletas", 0, 15) if r else tripletas[:10]
     except:
-        historial_raw = tripletas[:10]
+        historial = tripletas[:10]
     
-    historial_texto = " | ".join(historial_raw)
+    historial_texto = " | ".join(historial)
 
-    # 4. PROMPT MAESTRO V5.1 (TRIPLETA + MEMORIA ESTADÍSTICA)
+    # 4. PROMPT REFORZADO (SIN EJEMPLOS FALSOS)
     prompt_maestro = f"""
-    SISTEMA DE INTELIGENCIA DE BANCA - PROTOCOLO DE ANÁLISIS INTEGRAL V5.1
+    ANALISTA JEFE DE BANCA - INFORME TÉCNICO ESTRICTO
 
-    PERFIL: Analista Jefe con 30 años de calle. Experto en secuencias de Fijos y Corridos.
-    
-    DATOS DE LA JORNADA:
-    - ÚLTIMA TRIPLETA: {tripletas[0]}
-    - EL FIJO (Terminal): {fijo} ({CHARADA.get(fijo, 'Sin definir')})
-    - LOS CORRIDOS: {", ".join(corridos)}
-    - HISTORIAL DE PIZARRA (Últimas 20 tripletas): {historial_texto}
+    DATOS REALES DEL SORTEO:
+    - Tripleta Actual: {ultima_tripleta}
+    - Fijo (Terminal): {fijo}
+    - Corridos: {corridos}
+    - Historial de Secuencias: {historial_texto}
 
-    TAREA TÉCNICA:
-    1. ANALIZA LOS CORRIDOS: Evalúa cómo los números {corridos} están 'empujando' al próximo fijo.
-    2. PATRONES DE REPETICIÓN: Basado en el historial {historial_texto}, detecta si hay números que salieron como corridos y ahora les toca ser fijo (vueltos).
-    3. DETECCIÓN DE BOLA SORDA: ¿Qué decena o terminal ha desaparecido de la pizarra en las últimas 20 tripletas?
+    INSTRUCCIONES:
+    1. Basado en que el fijo fue {fijo}, determina los 5 números con mayor probabilidad estadística de salir en el próximo sorteo.
+    2. Analiza si los corridos ({corridos}) tienen fuerza para subir a fijos.
+    3. No inventes ejemplos. Usa la Charada Cubana para dar los nombres.
+    4. Sé constante. Tu análisis debe ser lógico y basado en patrones de repetición.
 
-    ENTREGA:
-    Presenta 5 Jugadas Maestras con este formato:
-    ---
+    FORMATO:
     ### 🎱 PIZARRA DE ALTA PRECISIÓN ###
-    
-    1. **[Número]** - (Nombre en Charada)
-       - **Fuerza:** [X]% 
-       - **Justificación:** (Breve análisis técnico basado en la tripleta {tripletas[0]} y el historial).
+    (Lista los 5 números con su probabilidad y la razón técnica basada en el historial)
 
     ---
-    **COMENTARIO DE PASILLO:** (Dime el pálpito de la calle sobre qué número está 'caliente' hoy).
+    **RESUMEN:** Una sola frase técnica sobre la tendencia.
     """
 
-    # 5. LLAMADA A LA IA (GROQ)
+    # 5. LLAMADA A LA IA CON TEMPERATURA BAJA (MÁXIMA SERIEDAD)
     try:
         if not GROQ_API_KEY:
-            return jsonify({"respuesta": "❌ Configura GROQ_API_KEY en Vercel."})
+            return jsonify({"respuesta": "❌ Error: Falta la API KEY."})
 
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions", 
             json={
                 "model": "llama-3.3-70b-versatile",
                 "messages": [
-                    {"role": "system", "content": "Eres el experto máximo en bolita cubana. No saludas, vas directo al análisis técnico de la pizarra."},
+                    {"role": "system", "content": "Eres un analista estadístico serio de lotería. No eres creativo, eres preciso y lógico."},
                     {"role": "user", "content": prompt_maestro}
                 ],
-                "temperature": 0.7,
-                "max_tokens": 1000
+                "temperature": 0.2, # <--- ESTO ES LO QUE LO HACE SERIO Y CONSTANTE
+                "max_tokens": 800
             }, 
             headers={"Authorization": f"Bearer {GROQ_API_KEY.strip()}"}, 
             timeout=25
@@ -125,13 +111,11 @@ def predecir():
 
         res_data = response.json()
         if "choices" not in res_data:
-            error_msg = res_data.get("error", {}).get("message", "Error desconocido")
-            return jsonify({"respuesta": f"❌ Error de análisis: {error_msg}"})
+            return jsonify({"respuesta": "❌ La IA está pensando, intenta en un momento."})
 
         return jsonify({"respuesta": res_data["choices"][0]["message"]["content"]})
 
     except Exception as e:
-        return jsonify({"respuesta": f"❌ Error Crítico: {str(e)}"})
+        return jsonify({"respuesta": f"❌ Error en el sistema: {str(e)}"})
 
-# Requisito para Vercel
 app = app
