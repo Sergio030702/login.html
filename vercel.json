@@ -1,21 +1,8 @@
 {
-  "version": 2,
   "crons": [
     {
       "path": "/api/predecir",
-      "schedule": "0 19,3 * * *"
-    }
-  ],
-  "builds": [
-    {
-      "src": "app.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app.py"
+      "schedule": "0 21 * * *"
     }
   ]
 }
