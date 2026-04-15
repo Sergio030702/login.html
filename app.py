@@ -71,7 +71,8 @@ def predecir():
         payload = {
             "model": "llama-3.1-8b-instant",
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.3
+            "temperature": 0.7, # Súbelo de 0.3 a 0.7 para que sea más variada
+            "max_tokens": 500
         }
         
         response = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers_ai, timeout=15)
