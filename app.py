@@ -1,51 +1,39 @@
 import os
 import requests
+import re
 from flask import Flask, render_template, jsonify
-import pandas as pd
 from collections import Counter
 
 app = Flask(__name__)
 
-# Configuración de Groq
+# Configuración de Groq desde variables de entorno
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 def obtener_historial_real():
-    """Extrae resultados reales de Pick 3 desde una fuente verificada."""
+    """Busca resultados reales usando expresiones regulares para evitar bloqueos."""
     try:
-        # Usamos LotteryUSA que es muy estable y fácil de leer
+        # Usamos LotteryUSA que es la más estable
         url = "https://www.lotteryusa.com/florida/pick-3/"
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         
-        res = requests.get(url, headers=headers, timeout=15)
+        res = requests.get(url, headers=headers, timeout=12)
         res.raise_for_status()
         
-        # Pandas busca las tablas en la web
-        tables = pd.read_html(res.text)
-        
-        # Normalmente la primera tabla (index 0) tiene los resultados recientes
-        df = tables[0]
+        # Buscamos patrones de números tipo '5-2-9' en el código de la página
+        # Esto es más efectivo que intentar leer tablas
+        patron = re.findall(r'\d-\d-\d', res.text)
         
         historial = []
-        # Buscamos en la columna donde están los números (suele llamarse 'Result' o ser la segunda columna)
-        # Tomamos los últimos resultados disponibles
-        for row in df.itertuples():
-            # Intentamos extraer el número de la columna correspondiente
-            # En Pick 3 suele venir como '1-2-3', nos interesa el terminal
-            try:
-                num_str = str(row[2]) # La columna 2 suele ser el resultado
-                if '-' in num_str:
-                    # Si viene como 1-2-3, tomamos el último número
-                    terminal = num_str.split('-')[-1].strip().zfill(2)
-                    historial.append(terminal)
-            except:
-                continue
-                
+        for combinacion in patron:
+            # Extraemos el último dígito (terminal)
+            terminal = combinacion.split('-')[-1].strip().zfill(2)
+            historial.append(terminal)
+            
         return historial if len(historial) > 0 else None
-
     except Exception as e:
-        print(f"Error de conexión: {e}")
+        print(f"Error técnico: {e}")
         return None
 
 @app.route('/')
@@ -55,41 +43,50 @@ def home():
 @app.route('/api/predecir')
 def predecir():
     if not GROQ_API_KEY:
-        return jsonify({"respuesta": "Error: Falta la clave GROQ_API_KEY en Vercel."})
+        return jsonify({"respuesta": "Error: Configura GROQ_API_KEY en Vercel."})
 
     # Intentamos obtener los datos reales
     historial = obtener_historial_real()
     
     if not historial:
-        return jsonify({"respuesta": "⚠️ No se pudo obtener datos reales de la Florida. La web de resultados no respondió. Por favor, intenta de nuevo más tarde."})
+        return jsonify({"respuesta": "⚠️ Los servidores de resultados están saturados o bloqueados. Por favor, intenta de nuevo en unos minutos."})
 
-    # Estadísticas para la IA
+    # Estadísticas para el prompt de la IA
     conteo = Counter(historial)
     frecuentes = conteo.most_common(5)
     recientes = historial[:10]
     
+    # Prompt estricto para evitar alucinaciones
     prompt = f"""
-    Eres un analista de Bolita Cubana. Analiza estos resultados REALES de Pick 3 Florida:
+    Eres un analista estadístico experto en la Bolita Cubana. 
+    Analiza estos TERMINALES REALES de Pick 3 Florida (últimos sorteos): {historial}.
     
-    - ÚLTIMOS TERMINALES: {recientes}
-    - MÁS REPETIDOS: {frecuentes}
-    - HISTORIAL ANALIZADO: {historial}
+    DATOS CLAVE:
+    1. El terminal más reciente es: {recientes[0]}.
+    2. Los números que más se repiten son: {frecuentes}.
+    
+    TAREA:
+    - Identifica patrones de frecuencia y números 'atrasados'.
+    - Usa la lógica de la Charada Cubana para proponer 5 números probables.
+    - No inventes datos que no estén en la lista.
+    - Explica brevemente tu razonamiento basado en la estadística de estos números.
 
-    BASADO EN ESTOS DATOS:
-    1. Busca patrones de repetición o números que no han salido.
-    2. Usa la lógica de la Charada Cubana para dar 5 números probables.
-    3. Explica tu razonamiento basándote en que el último terminal fue el {recientes[0]}.
-    
     Resalta los números en **negrita**.
     """
     
     url_groq = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
     payload = {
         "model": "llama3-8b-8192",
-        "messages": [{"role": "system", "content": "Analista estadístico serio."},
-                     {"role": "user", "content": prompt}],
-        "temperature": 0.3
+        "messages": [
+            {"role": "system", "content": "Analista serio de lotería. No inventas resultados."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.3 # Temperatura baja para que sea preciso
     }
 
     try:
@@ -97,6 +94,6 @@ def predecir():
         res_data = response.json()
         return jsonify({"respuesta": res_data["choices"][0]["message"]["content"]})
     except:
-        return jsonify({"respuesta": "Error al conectar con la IA."})
+        return jsonify({"respuesta": "Error de conexión con la inteligencia artificial."})
 
 app.debug = False
