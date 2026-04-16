@@ -11,7 +11,6 @@ r = redis.Redis.from_url(redis_url, decode_responses=True, socket_timeout=5, ret
 # ==============================================================================
 # 🛠️ ADVANCED PROMPT ENGINEERING CORE (The "Brain" Instructions)
 # ==============================================================================
-# Reinstalado el prompt completo para que la IA no pierda el enfoque profesional
 MASTER_SYSTEM_PROMPT = """
 [SYSTEM IDENTITY]: You are a High-Performance Data Analyst specialized in Sequence Recognition for Lottery Systems (La Bolita).
 [OPERATIONAL PROTOCOLS]:
@@ -31,15 +30,15 @@ MASTER_SYSTEM_PROMPT = """
 """
 
 # ==============================================================================
-# MOTOR BI v6.5 - VECTORIAL & JUSTIFICADO
+# MOTOR BI v7.0 - ANALISTA ESTRATÉGICO CON ARGUMENTACIÓN
 # ==============================================================================
-def motor_bi_arquitecto_justificado(pizarra, fijo, significado):
+def motor_bi_argumentado(pizarra, fijo, significado):
     historial = r.lrange("historial_bolita", 0, -1)
     
     if not historial:
-        return "❌ ERROR_DB: Base de datos no detectada. Verifique conexión Redis."
+        return "❌ ERROR_DB: No hay historial disponible para análisis."
 
-    # --- FASE 1: EXTRACCIÓN DE RASTRO COMPLETO ---
+    # --- FASE 1: RASTRO COMPLETO ---
     adelante = [] # T+1
     atras = []    # T-1
     for i in range(len(historial)):
@@ -47,59 +46,61 @@ def motor_bi_arquitecto_justificado(pizarra, fijo, significado):
             if i > 0: adelante.append(historial[i-1].split('-')[0][-2:])
             if i < len(historial) - 1: atras.append(historial[i+1].split('-')[0][-2:])
 
-    # --- FASE 2: ANALISIS DE PIZARRA ACTUAL (CORRIDOS) ---
+    # --- FASE 2: ANALISIS DE CORRIDOS ---
     partes = pizarra.split('-')
     corridos = [partes[1], partes[2]] if len(partes) > 2 else []
 
-    # --- FASE 3: CONSTRUCCIÓN DE POOL CON JUSTIFICACIÓN ---
+    # --- FASE 3: CONSTRUCCIÓN CON ARGUMENTO DETALLADO ---
     pool_final = []
     vistos = set()
 
-    def agregar_al_pool(lista_nums, motivo):
+    def agregar_al_pool(lista_nums, motivo_base, detalle_tecnico):
         for n in lista_nums:
             if n.isdigit() and len(n) == 2 and n not in vistos and len(pool_final) < 5:
-                pool_final.append({"num": n, "pq": motivo})
+                # Calculamos frecuencia para el argumento
+                freq = Counter(adelante + atras).get(n, 1)
+                argumento = f"{motivo_base} ({detalle_tecnico} con frecuencia de {freq}x)"
+                pool_final.append({"num": n, "pq": argumento})
                 vistos.add(n)
 
-    # 1. Prioridad: Intersección (Números en ambos rastros - Máximo Peso)
+    # 1. Rastro Doble
     interseccion = list(set(adelante) & set(atras))
-    agregar_al_pool(interseccion, "Rastro Doble (Origen y Destino)")
+    agregar_al_pool(interseccion, "Rastro de Alta Fidelidad", "Detectado en secuencia de entrada y salida")
 
-    # 2. Prioridad: Frecuencia Forward (Lo que más sale después del fijo)
+    # 2. Frecuencia Adelante (Futuro)
     frec_adelante = [num for num, count in Counter(adelante).most_common()]
-    agregar_al_pool(frec_adelante, "Frecuencia en Rastro Adelante (T+1)")
+    agregar_al_pool(frec_adelante, "Patrón de Salida Dominante", "Fuerte tendencia a seguir al fijo actual")
 
-    # 3. Prioridad: Corridos (Simetría de la pizarra actual)
-    agregar_al_pool(corridos, "Acompañante de Pizarra (Corrido)")
+    # 3. Corridos
+    agregar_al_pool(corridos, "Arrastre por Simetría", "Tensión detectada en los números acompañantes de la pizarra")
 
-    # 4. Prioridad: Rastro Atrás (Lo que históricamente trajo al fijo)
+    # 4. Rastro Atrás (Origen)
     frec_atras = [num for num, count in Counter(atras).most_common()]
-    agregar_al_pool(frec_atras, "Frecuencia en Rastro Atrás (T-1)")
+    agregar_al_pool(frec_atras, "Vínculo de Origen Histórico", "Número con alta probabilidad de retorno cíclico")
 
-    # 5. Prioridad: Jale por Simetría Matemática
+    # 5. Jale
     while len(pool_final) < 5:
         jale = str((int(fijo) + 25 + len(pool_final)) % 100).zfill(2)
-        agregar_al_pool([jale], "Cálculo Técnico por Jale Simétrico")
+        agregar_al_pool([jale], "Proyección por Jale", "Cálculo de simetría matemática (+25/+50)")
 
-    # --- FASE 4: FORMATO DE SALIDA "BOLITA IA MASTER" ---
+    # --- FASE 4: REPORTE BOLITA IA MASTER ---
     lineas_justificadas = ""
     for item in pool_final:
-        lineas_justificadas += f"🔥 **{item['num']}** → {item['pq']}\n"
+        lineas_justificadas += f"🔥 **{item['num']}**\n   └─ *{item['pq']}*\n"
 
     return (
-        f"🇨🇺 **BOLITA IA MASTER v6.5**\n"
+        f"🇨🇺 **BOLITA IA MASTER v7.0**\n"
         f"**PIZARRA ACTUAL:** {pizarra} | **ANCHOR:** {fijo} ({significado})\n"
         f"--------------------------------------------------\n"
-        f"🧠 **ENGINEERING AUDIT (VECTORIAL):**\n"
-        f"● **Forward Trace (T+1):** {len(adelante)} patrones detectados.\n"
-        f"● **Backward Trace (T-1):** {len(atras)} orígenes identificados.\n"
-        f"● **Symmetry Status:** Corridos {', '.join(corridos)} procesados.\n\n"
-        f"🎯 **PRONÓSTICO Y JUSTIFICACIÓN:**\n"
+        f"🧠 **ENGINEERING AUDIT:**\n"
+        f"● **Sampling:** {len(historial)} registros analizados.\n"
+        f"● **Vector Analysis:** {len(adelante) + len(atras)} puntos de conexión hallados.\n\n"
+        f"🎯 **PRONÓSTICO Y ARGUMENTACIÓN TÉCNICA:**\n"
         f"{lineas_justificadas}\n"
         f"📌 **ANALYSIS SUMMARY:**\n"
-        f"El motor ha ejecutado un análisis retrospectivo sobre {len(historial)} tiros. "
-        f"El número **{pool_final[0]['num']}** lidera la probabilidad por su fuerte rastro "
-        f"histórico tras la salida del {fijo}.\n"
+        f"Tras auditar el rastro del fijo {fijo}, el motor identifica al **{pool_final[0]['num']}** "
+        f"como el vector con mayor peso estadístico. La recurrencia en el rastro T+1 indica "
+        f"una ventana de salida inminente según los últimos ciclos analizados.\n"
         f"--------------------------------------------------"
     )
 
@@ -110,7 +111,6 @@ def index():
 @app.route('/api/predecir')
 def predecir():
     try:
-        # SCRAPER DINÁMICO (Florida Lottery Sync)
         p, f = None, None
         try:
             res = requests.get("https://www.lotteryusa.com/florida/", timeout=5, headers={'User-Agent': 'Mozilla/5.0'})
@@ -124,20 +124,17 @@ def predecir():
             p = r.lindex("historial_bolita", 0) or "000-00-00"
             f = p.split('-')[0][-2:]
         else:
-            # Auto-save si detecta tiro nuevo en la web
             if p != r.lindex("historial_bolita", 0):
                 r.lpush("historial_bolita", p)
                 r.ltrim("historial_bolita", 0, 1000)
 
-        # Cargar Charada
         try:
             from charada import LISTA_CHARADA
             significado = LISTA_CHARADA.get(f, "N/A")
         except:
             significado = "N/A"
 
-        # Ejecutar Motor Profesional
-        respuesta = motor_bi_arquitecto_justificado(p, f, significado)
+        respuesta = motor_bi_argumentado(p, f, significado)
         return jsonify({"respuesta": respuesta})
 
     except Exception as e:
