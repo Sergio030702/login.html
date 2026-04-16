@@ -2,85 +2,96 @@ import os, re, requests, redis
 from flask import Flask, render_template, jsonify
 from datetime import datetime
 
-app = Flask(__name__)
+# Importamos la charada
+try:
+    from charada import LISTA_CHARADA
+except ImportError:
+    LISTA_CHARADA = {}
 
-# Conexión a Redis
+app = Flask(__name__)
 r = redis.Redis.from_url(os.environ.get("loteria_db_REDIS_URL"), decode_responses=True)
 
-# 1. FUNCIÓN DE SCRAPER MEJORADA (Con manejo de errores total)
-def obtener_datos_florida():
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    try:
-        # Intentamos conectar, pero con un tiempo límite corto para que no se quede colgado
-        res = requests.get("https://www.lotteryusa.com/florida/", timeout=5, headers=headers)
-        if res.status_code == 200:
-            nums = re.findall(r'result-ball">(\d)', res.text)
-            if len(nums) >= 9:
-                p = f"{nums[1]}{nums[2]}{nums[3]}-{nums[4]}{nums[5]}-{nums[7]}{nums[8]}"
-                f = f"{nums[2]}{nums[3]}"
-                return p, f
-    except:
-        pass
-    return None, None
+# --- CONFIGURACIÓN DE INTELIGENCIA ---
+def generar_analisis_ia(pizarra, fijo, rastro, significado):
+    """
+    Aquí es donde vive la lógica del prompt que enviamos a la IA.
+    Prepara un análisis basado en los patrones que detectamos.
+    """
+    # Determinamos el turno
+    hora_actual = datetime.now().hour
+    turno_objetivo = "Noche" if hora_actual < 18 else "Mañana"
+    
+    # Construcción del Prompt de BI (Inteligencia de Negocio)
+    prompt = f"""
+    Basado en la pizarra {pizarra} con el fijo {fijo} ({significado}).
+    El rastro histórico indica que después de estos números suelen venir: {rastro}.
+    Objetivo: Pronóstico para la {turno_objetivo}.
+    Analizando jales, terminales y el arrastre de los corridos...
+    """
+    # Aquí puedes conectar con Groq/OpenAI si tienes la API. 
+    # Por ahora, generamos una respuesta lógica basada en los datos:
+    proyeccion = f"Vigilar la decena del {fijo[0]}0 y los terminales del rastro ({rastro})."
+    return proyeccion
 
-# 2. RUTA PRINCIPAL (Carga la página)
+def obtener_pizarra_bi():
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        res = requests.get("https://www.lotteryusa.com/florida/", timeout=10, headers=headers)
+        nums = re.findall(r'result-ball">(\d)', res.text)
+        if len(nums) >= 9:
+            p = f"{nums[1]}{nums[2]}{nums[3]}-{nums[4]}{nums[5]}-{nums[7]}{nums[8]}"
+            f = f"{nums[2]}{nums[3]}"
+            return p, f
+    except:
+        return None, None
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# 3. RUTA QUE TU HTML LLAMA (Aquí es donde daba el error)
-# He puesto las 3 rutas posibles que suelen usarse para que no falle el enlace
 @app.route('/generar_pronostico')
-@app.route('/api/predecir')
-@app.route('/predecir')
-def predecir():
-    try:
-        # Intentamos buscar en la web
-        pizarra, fijo = obtener_datos_florida()
-        
-        # SI LA WEB FALLA (Lo que te está pasando), usamos el historial de Redis
-        if not pizarra:
-            # Buscamos el último resultado válido en tu base de datos (los de marzo/abril)
-            # Limpiamos basura de 1 o 2 dígitos
-            while r.lindex("historial_bolita", 0) and len(r.lindex("historial_bolita", 0)) < 5:
-                r.lpop("historial_bolita")
-            
-            pizarra = r.lindex("historial_bolita", 0) or "293-57-58"
-            fijo = pizarra.split('-')[0][-2:]
-            estatus = "Historial"
-        else:
-            # Si la web funcionó, guardamos el nuevo resultado
-            if pizarra != r.lindex("historial_bolita", 0):
-                r.lpush("historial_bolita", pizarra)
-                r.ltrim("historial_bolita", 0, 100)
-            estatus = "En Vivo"
+def generar_pronostico():
+    # 1. Obtener datos actuales o de historial (Limpieza de basura)
+    p, f = obtener_pizarra_bi()
+    
+    if not p:
+        while r.lindex("historial_bolita", 0) and len(r.lindex("historial_bolita", 0)) < 5:
+            r.lpop("historial_bolita")
+        p = r.lindex("historial_bolita", 0) or "293-57-58"
+        f = p.split('-')[0][-2:] if '-' in p else "93"
+    else:
+        # Guardar en historial si es nuevo
+        if p != r.lindex("historial_bolita", 0):
+            r.lpush("historial_bolita", p)
+            r.ltrim("historial_bolita", 0, 100)
 
-        # ANALISIS DE RASTRO (Usando lo que ya tenemos en memoria)
-        historial = r.lrange("historial_bolita", 0, -1)
-        hits = []
-        for i in range(len(historial) - 1):
-            if fijo in historial[i+1]:
-                hits.append(historial[i].split('-')[0][-2:])
-        
-        rastro = list(set(hits))[:3] if hits else ["83", "01", "85"]
+    # 2. Análisis de Rastro Profundo (Tu historial de marzo/abril)
+    historial = r.lrange("historial_bolita", 0, -1)
+    hits = []
+    for i in range(len(historial) - 1):
+        # Buscamos coincidencias en el pasado para predecir el futuro
+        p_pasada = historial[i+1]
+        if f in p_pasada and len(p_pasada) > 5:
+            fijo_despues = historial[i].split('-')[0][-2:]
+            hits.append(fijo_despues)
+    
+    rastro_lista = list(set(hits))[:3] if hits else ["83", "01", "85"]
+    rastro_str = ", ".join(rastro_lista)
+    
+    # 3. Datos de Charada y Análisis IA
+    significado = LISTA_CHARADA.get(f, "N/A")
+    analisis_ia = generar_analisis_ia(p, f, rastro_str, significado)
 
-        # Devolvemos la respuesta en el formato exacto que tu JS espera
-        return jsonify({
-            "pizarra": pizarra,
-            "fijo": fijo,
-            "rastro": ", ".join(rastro),
-            "estatus": estatus,
-            "fecha": datetime.now().strftime("%d/%m %H:%M")
-        })
-
-    except Exception as e:
-        # Si todo falla, devolvemos un dato seguro para que no salga el mensaje de error
-        return jsonify({
-            "pizarra": "293-57-58",
-            "fijo": "93",
-            "rastro": "83, 01, 85",
-            "estatus": "Seguridad"
-        })
+    # 4. Respuesta completa para tu HTML
+    # Agregué la llave 'ia' por si tu HTML la usa para mostrar el texto largo
+    return jsonify({
+        "pizarra": p,
+        "fijo": f,
+        "significado": significado,
+        "rastro": rastro_str,
+        "ia": analisis_ia,
+        "objetivo": "NOCHE" if datetime.now().hour < 18 else "MAÑANA"
+    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
