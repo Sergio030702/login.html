@@ -1,8 +1,8 @@
 import os, re, requests, redis
-from flask import Flask, jsonify
+from flask import Flask, render_template
 from datetime import datetime
 
-# Intento de importar charada
+# Intentamos importar tu charada
 try:
     from charada import LISTA_CHARADA
 except ImportError:
@@ -10,107 +10,87 @@ except ImportError:
 
 app = Flask(__name__)
 
-# Conexión a Redis
+# Conexión a tu Redis de 30MB
 r = redis.Redis.from_url(os.environ.get("loteria_db_REDIS_URL"), decode_responses=True)
 
 # ==========================================
-# FUNCIONES DE EXTRACCIÓN (SCRAPER)
+# MOTOR DE BÚSQUEDA Y LIMPIEZA
 # ==========================================
 
-def obtener_pizarra():
-    """Busca resultados con un método más resistente a bloqueos"""
-    urls = [
-        "https://www.lotteryusa.com/florida/pick-4/",
-        "https://www.lotteryusa.com/florida/pick-5/"
-    ]
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    
+def obtener_pizarra_real():
+    """Busca los números en Florida con headers para evitar bloqueos"""
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     try:
-        # Buscamos Pick 4
-        res4 = requests.get(urls[0], timeout=12, headers=headers)
-        b4 = re.findall(r'result-ball">(\d)', res4.text)[:4]
-        
-        # Buscamos Pick 5
-        res5 = requests.get(urls[1], timeout=12, headers=headers)
-        b5 = re.findall(r'result-ball">(\d)', res5.text)[:5]
+        r4 = requests.get("https://www.lotteryusa.com/florida/pick-4/", timeout=10, headers=headers)
+        r5 = requests.get("https://www.lotteryusa.com/florida/pick-5/", timeout=10, headers=headers)
+        b4 = re.findall(r'result-ball">(\d)', r4.text)[:4]
+        b5 = re.findall(r'result-ball">(\d)', r5.text)[:5]
         
         if len(b4) >= 4 and len(b5) >= 5:
-            # Pizarra: CentenaFijo - Corrido1 - Corrido2
-            pizarra = f"{b4[1]}{b4[2]}{b4[3]}-{b5[0]}{b5[1]}-{b5[3]}{b5[4]}"
-            fijo = f"{b4[2]}{b4[3]}"
-            turno = "M" if datetime.now().hour < 18 else "N"
-            return {"p": pizarra, "f": fijo, "t": turno}
-    except Exception as e:
-        print(f"Error de conexión: {e}")
-    return None
+            p = f"{b4[1]}{b4[2]}{b4[3]}-{b5[0]}{b5[1]}-{b5[3]}{b5[4]}"
+            f = f"{b4[2]}{b4[3]}"
+            t = "M" if datetime.now().hour < 18 else "N"
+            return {"p": p, "f": f, "t": t}
+    except:
+        return None
 
-def buscar_rastro(pizarra_actual):
-    """Analiza el historial en Redis para buscar qué salió después de números similares"""
-    if not pizarra_actual: return []
+def buscar_rastro_limpio(pizarra_actual):
+    """Analiza el historial ignorando datos basura como el '01'"""
+    if not pizarra_actual or len(pizarra_actual) < 5: return []
     
     historial = r.lrange("historial_bolita", 0, -1)
-    partes = pizarra_actual.split('-')
-    if len(partes) < 1: return []
-    
-    fijo_hoy = partes[0][-2:]
-    corridos_hoy = partes[1:]
+    fijo_hoy = pizarra_actual.split('-')[0][-2:]
     
     hits = []
-    # Escaneamos el pasado (del más nuevo al más viejo)
     for i in range(len(historial) - 1):
-        p_pasada = historial[i+1] # El sorteo anterior en el historial
-        # Si el fijo o corridos coinciden con lo que hubo en el pasado
-        if fijo_hoy in p_pasada or any(c in p_pasada for c in corridos_hoy):
-            # El "Rastro" es lo que salió JUSTO DESPUÉS de esa coincidencia
-            despues = historial[i].split('-')[0][-2:]
-            hits.append(despues)
-            
-    # Retornar los 3 más frecuentes sin repetir
+        p_vieja = historial[i+1]
+        # Solo analizamos si la pizarra vieja es válida (formato 000-00-00)
+        if len(p_vieja) > 5 and fijo_hoy in p_vieja:
+            fijo_despues = historial[i].split('-')[0][-2:]
+            if len(fijo_despues) == 2: # Solo fijos válidos
+                hits.append(fijo_despues)
+                
     return sorted(list(set(hits)), key=hits.count, reverse=True)[:3]
 
 # ==========================================
-# RUTA PRINCIPAL
+# RUTA PRINCIPAL (CONECTA CON TU HTML)
 # ==========================================
 
 @app.route('/')
 def home():
-    datos = obtener_pizarra()
+    # 1. Limpieza de emergencia de datos basura en Redis (el famoso "01")
+    while r.lindex("historial_bolita", 0) and len(r.lindex("historial_bolita", 0)) < 5:
+        r.lpop("historial_bolita")
+
+    # 2. Intentar obtener pizarra nueva
+    datos = obtener_pizarra_real()
     
-    # Si la web falla, usamos el último guardado para no dar error
     if not datos:
-        ultima_p = r.lindex("historial_bolita", 0)
-        rastro = buscar_rastro(ultima_p)
-        return jsonify({
-            "estatus": "MODO HISTORIAL (Web Lotería en mantenimiento)",
-            "ultima_pizarra_db": ultima_p,
-            "rastro_detectado": rastro,
-            "nota": "La web oficial no respondió. Mostrando análisis del último cierre."
-        })
+        # Si falla la web, usamos lo último bueno que tengamos
+        p = r.lindex("historial_bolita", 0) or "Esperando..."
+        f = p.split('-')[0][-2:] if '-' in p else "--"
+        turno = "Pendiente"
+    else:
+        p = datos['p']
+        f = datos['f']
+        turno = "NOCHE" if datos['t'] == "M" else "MAÑANA"
+        
+        # Guardar en historial si es nuevo y válido
+        if p != r.lindex("historial_bolita", 0):
+            r.lpush("historial_bolita", p)
+            r.ltrim("historial_bolita", 0, 200)
 
-    # Si la web responde:
-    # 1. Guardamos el resultado del día para control interno
-    hoy = datetime.now().strftime("%Y-%m-%d")
-    r.hset(f"registro:{hoy}:{datos['t']}", mapping={"p": datos['p'], "f": datos['f']})
-    
-    # 2. Actualizamos el historial general si el número es nuevo
-    ultimo_h = r.lindex("historial_bolita", 0)
-    if ultimo_h != datos['p']:
-        r.lpush("historial_bolita", datos['p'])
-        r.ltrim("historial_bolita", 0, 500) # Mantener historial sano bajo 30MB
+    # 3. Preparar variables para TU HTML
+    rastro = buscar_rastro_limpio(p)
+    significado = LISTA_CHARADA.get(f, "N/A")
 
-    # 3. Generar análisis
-    rastro = buscar_rastro(datos['p'])
-    desc_fijo = LISTA_CHARADA.get(datos['f'], "N/A")
-    proximo = "NOCHE" if datos['t'] == "M" else "MAÑANA"
-
-    return jsonify({
-        "estatus": "SISTEMA ONLINE",
-        "pizarra_actual": datos['p'],
-        "fijo_hoy": f"{datos['f']} - {desc_fijo}",
-        "analisis_rastro": rastro,
-        "pronostico_para": f"Sorteo de la {proximo}",
-        "mensaje": f"Después de salir el {datos['f']}, el historial sugiere vigilar: {', '.join(rastro)}"
-    })
+    # Renderizamos TU archivo templates/index.html (o como se llame)
+    return render_template('index.html', 
+                           pizarra=p, 
+                           fijo=f, 
+                           significado=significado,
+                           rastro=", ".join(rastro),
+                           objetivo=turno)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
