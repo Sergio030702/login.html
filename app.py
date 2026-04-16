@@ -9,7 +9,7 @@ redis_url = os.environ.get("loteria_db_REDIS_URL")
 r = redis.Redis.from_url(redis_url, decode_responses=True, socket_timeout=5, retry_on_timeout=True)
 
 # ==============================================================================
-# 🛠️ THE MASTER PROMPT ENGINEERING CORE (INTEGRO Y COMPLETO)
+# 🛠️ THE MASTER PROMPT ENGINEERING CORE (INTEGRO Y COMPLETO - NO TOCAR)
 # ==============================================================================
 MASTER_SYSTEM_PROMPT = """
 ROLE: Senior Business Intelligence Architect & Statistical Pattern Analyst.
@@ -27,14 +27,20 @@ OUTPUT: Professional, data-driven, percentage-based forecasting, and stripped of
 """
 
 # ==============================================================================
-# MOTOR BI v8.7 - ANÁLISIS PORCENTUAL JUSTIFICADO
+# MOTOR BI v9.0 - ANÁLISIS PORCENTUAL CON FILTRO DE ARCHIVO
 # ==============================================================================
-def motor_bi_maestro_final(pizarra, fijo, significado):
+def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
     historial = r.lrange("historial_bolita", 0, -1)
     if not historial:
         return "❌ ERROR_DB: Sincronización de datos requerida."
 
-    # --- 1. RASTRO BIDIRECCIONAL ---
+    # --- 1. IMPORTAR TU ARCHIVO DE DATOS ---
+    try:
+        from charada_data import LISTA_CHARADA
+    except:
+        LISTA_CHARADA = {}
+
+    # --- 2. RASTRO BIDIRECCIONAL ---
     adelante = [] 
     atras = []
     for i in range(len(historial)):
@@ -42,7 +48,16 @@ def motor_bi_maestro_final(pizarra, fijo, significado):
             if i > 0: adelante.append(historial[i-1].split('-')[0][-2:])
             if i < len(historial) - 1: atras.append(historial[i+1].split('-')[0][-2:])
     
-    # --- 2. LÓGICA DE CORRIDOS Y PIZARRA ---
+    # --- 3. ANALIZADOR DE VÍNCULOS (SOLO USANDO TU ARCHIVO) ---
+    def tiene_relacion_en_archivo(n_analizar):
+        sig_n = LISTA_CHARADA.get(n_analizar, "").lower()
+        if not significado_fijo or not sig_n: return False
+        # Buscamos si comparten alguna palabra (ej: "muerto" y "muerto grande")
+        palabras_anchor = set(re.findall(r'\w+', significado_fijo.lower()))
+        palabras_target = set(re.findall(r'\w+', sig_n))
+        return len(palabras_anchor.intersection(palabras_target)) > 0
+
+    # --- 4. LÓGICA DE CORRIDOS Y PIZARRA ---
     partes = pizarra.split('-')
     corridos = [partes[1], partes[2]] if len(partes) > 2 else []
     
@@ -50,33 +65,35 @@ def motor_bi_maestro_final(pizarra, fijo, significado):
     vistos = set()
 
     def agregar_analisis(lista_nums, motivo, peso_base):
-        for n in lista_nums:
+        for i, n in enumerate(lista_nums):
             if n.isdigit() and len(n) == 2 and n not in vistos and len(pool_final) < 5:
                 # CÁLCULO DE PORCENTAJE
                 frec = Counter(adelante + atras).get(n, 0)
-                prob = peso_base + (frec * 7)
-                prob = min(prob, 98) # Techo de seguridad
+                ajuste_pos = (len(lista_nums) - i) * 1.1
+                prob = peso_base + (frec * 6) + ajuste_pos
                 
-                pool_final.append({"num": n, "prob": prob, "pq": motivo})
+                info_extra = motivo
+                # SI TIENEN ALGO EN COMÚN EN TU ARCHIVO, SUMA PUNTOS
+                if tiene_relacion_en_archivo(n):
+                    prob += 12
+                    info_extra += " + Relación de Significado Detectada"
+
+                prob = min(prob, 98.5)
+                pool_final.append({"num": n, "prob": round(prob, 1), "pq": info_extra})
                 vistos.add(n)
 
-    # CAPAS DE PROBABILIDAD SEGÚN EL PROMPT
-    # Layer 1: Intersección (Rastro Doble)
+    # CAPAS DE PROBABILIDAD (MANTENIENDO EL ORDEN ORIGINAL)
     inter = list(set(adelante) & set(atras))
     agregar_analisis(inter, "Convergencia de Rastro de Alta Fidelidad", 70)
 
-    # Layer 2: Rastro Adelante (T+1)
     f_adelante = [num for num, count in Counter(adelante).most_common()]
     agregar_analisis(f_adelante, "Patrón de Salida Dominante Histórico", 60)
 
-    # Layer 3: Corridos (Simetría)
-    agregar_analisis(corridos, "Tensión por Arrastre de Corridos", 50)
+    agregar_analisis(corridos, "Tensión por Arrastre de Corridos", 55)
 
-    # Layer 4: Rastro Atrás (T-1)
     f_atras = [num for num, count in Counter(atras).most_common()]
     agregar_analisis(f_atras, "Vínculo de Origen por Rastro Histórico", 45)
 
-    # Layer 5: Jale Matemático
     while len(pool_final) < 5:
         jale = str((int(fijo) + 25 + len(pool_final)) % 100).zfill(2)
         agregar_analisis([jale], "Proyección por Simetría Matemática (+25)", 35)
@@ -87,8 +104,8 @@ def motor_bi_maestro_final(pizarra, fijo, significado):
         lineas += f"🔥 **{it['num']}** → **{it['prob']}%**\n   └─ *{it['pq']}*\n"
 
     return (
-        f"🇨🇺 **BOLITA IA MASTER v8.7**\n"
-        f"**PIZARRA:** {pizarra} | **ANCHOR:** {fijo} ({significado})\n"
+        f"🇨🇺 **BOLITA IA MASTER v9.0**\n"
+        f"**PIZARRA:** {pizarra} | **ANCHOR:** {fijo} ({significado_fijo})\n"
         f"--------------------------------------------------\n"
         f"🧠 **ENGINEERING AUDIT (FULL PROMPT):**\n"
         f"● **Vector Sampling:** {len(historial)} registros analizados.\n"
@@ -97,8 +114,8 @@ def motor_bi_maestro_final(pizarra, fijo, significado):
         f"{lineas}\n"
         f"📌 **ANALYSIS SUMMARY:**\n"
         f"Basado en el rastro del fijo {fijo}, el motor proyecta al **{pool_final[0]['num']}** "
-        f"con el mayor peso estadístico ({pool_final[0]['prob']}%). El análisis de rastro T+1 "
-        f"valida la secuencia según el historial auditado.\n"
+        f"con el mayor peso estadístico ({pool_final[0]['prob']}%). El análisis incluye "
+        f"validación por significado común según charada_data.py.\n"
         f"--------------------------------------------------"
     )
 
@@ -127,7 +144,7 @@ def predecir():
                 r.lpush("historial_bolita", p)
                 r.ltrim("historial_bolita", 0, 1000)
 
-        # USAR TU ARCHIVO charada_data.py
+        # IMPORTAR DE TU ARCHIVO ESPECÍFICO
         try:
             from charada_data import LISTA_CHARADA
             sig = LISTA_CHARADA.get(f, "N/A")
