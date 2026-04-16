@@ -2,7 +2,7 @@ import os, re, requests, redis
 from flask import Flask, jsonify
 from datetime import datetime
 
-# Intentamos importar la charada, si no existe creamos un diccionario vacío
+# Intento de importar charada, si no existe se crea vacío
 try:
     from charada import LISTA_CHARADA
 except ImportError:
@@ -10,14 +10,14 @@ except ImportError:
 
 app = Flask(__name__)
 
-# Conexión a Redis optimizada para 30MB
+# Conexión a Redis optimizada (30MB)
 r = redis.Redis.from_url(os.environ.get("loteria_db_REDIS_URL"), decode_responses=True)
 
 # ==========================================
-# CARGA DE DATOS (YA FORMATEADA PARA REDIS)
+# CARGA DE DATOS INICIAL (MARZO-ABRIL)
 # ==========================================
 def cargar_datos_si_vacio():
-    """Solo inyecta los datos si la lista está vacía para no repetir"""
+    """Inyecta el historial de WhatsApp solo si Redis está vacío"""
     if r.llen("historial_bolita") == 0:
         datos = [
             "036-32-92", "815-63-22", "585-09-71", "801-21-25", "033-17-33", "397-22-12", "466-23-05", 
@@ -32,7 +32,7 @@ def cargar_datos_si_vacio():
         for d in datos:
             r.rpush("historial_bolita", d)
 
-# Ejecutamos la carga al iniciar
+# Ejecutar carga al iniciar la app
 cargar_datos_si_vacio()
 
 # ==========================================
@@ -40,68 +40,94 @@ cargar_datos_si_vacio()
 # ==========================================
 
 def obtener_pizarra():
+    """Busca los resultados en la web oficial"""
     try:
-        r4 = requests.get("https://www.lotteryusa.com/florida/pick-4/", timeout=10)
-        r5 = requests.get("https://www.lotteryusa.com/florida/pick-5/", timeout=10)
+        # User-agent para evitar bloqueos básicos
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        r4 = requests.get("https://www.lotteryusa.com/florida/pick-4/", timeout=10, headers=headers)
+        r5 = requests.get("https://www.lotteryusa.com/florida/pick-5/", timeout=10, headers=headers)
+        
         b4 = re.findall(r'result-ball">(\d)', r4.text)[:4]
         b5 = re.findall(r'result-ball">(\d)', r5.text)[:5]
         
-        if b4 and b5:
+        if len(b4) >= 4 and len(b5) >= 5:
             pizarra = f"{b4[1]}{b4[2]}{b4[3]}-{b5[0]}{b5[1]}-{b5[3]}{b5[4]}"
             fijo = f"{b4[2]}{b4[3]}"
+            # Turno: Mediodía (M) antes de las 6 PM, Noche (N) después
             turno = "M" if datetime.now().hour < 18 else "N"
             return {"p": pizarra, "f": fijo, "t": turno}
-    except: return None
+    except Exception as e:
+        print(f"Error scraping: {e}")
+    return None
 
 def buscar_rastro(pizarra_actual):
+    """Analiza el historial en Redis para encontrar patrones"""
+    if not pizarra_actual: return []
+    
     historial = r.lrange("historial_bolita", 0, -1)
+    # Extraer el fijo (los dos últimos dígitos antes del primer guion)
     fijo_hoy = pizarra_actual.split('-')[0][-2:]
     corridos_hoy = pizarra_actual.split('-')[1:]
     
     hits = []
-    # Buscamos coincidencias de fijo o corridos
     for i in range(len(historial) - 1, 0, -1):
-        if fijo_hoy in historial[i] or any(c in historial[i] for c in corridos_hoy):
-            despues = historial[i-1].split('-')[0][-2:]
-            hits.append(despues)
+        p_vieja = historial[i]
+        # Si coincide el fijo o algún corrido
+        if fijo_hoy in p_vieja or any(c in p_vieja for c in corridos_hoy):
+            # Obtener el fijo del sorteo que ocurrió justo después
+            try:
+                despues = historial[i-1].split('-')[0][-2:]
+                hits.append(despues)
+            except: continue
+            
     return list(set(hits))[:3]
 
 # ==========================================
-# RUTA PRINCIPAL (ESTA ES LA QUE ABRES)
+# RUTA PRINCIPAL
 # ==========================================
 
 @app.route('/')
 def home():
     datos = obtener_pizarra()
+    
+    # PLAN B: Si la web oficial falla, usamos el historial
     if not datos:
-        return "<h3>Error: No se pudo obtener la pizarra. Reintenta en un momento.</h3>"
+        ultima_pizarra = r.lindex("historial_bolita", 0)
+        if not ultima_pizarra:
+            return "<h3>Error crítico: No hay conexión ni datos en historial.</h3>"
+        
+        rastro = buscar_rastro(ultima_pizarra)
+        return jsonify({
+            "estatus": "MODO HISTORIAL (Web Lotería no disponible)",
+            "ultima_pizarra_en_db": ultima_pizarra,
+            "objetivo_pronostico": "Actualización pendiente",
+            "rastro_detectado": rastro,
+            "nota": "Mostrando análisis basado en el último resultado guardado."
+        })
 
-    # 1. Guardar en Redis (Diferenciando por día y turno)
+    # PROCESO NORMAL: Si la web responde bien
     hoy = datetime.now().strftime("%Y%m%d")
     r.hset(f"lot:{hoy}:{datos['t']}", mapping={"res": datos['p'], "fijo": datos['f']})
     
-    # 2. Actualizar historial si el número es nuevo
-    ultimo = r.lindex("historial_bolita", 0)
-    if ultimo != datos['p']:
+    # Guardar en historial si es un resultado nuevo
+    ultimo_guardado = r.lindex("historial_bolita", 0)
+    if ultimo_guardado != datos['p']:
         r.lpush("historial_bolita", datos['p'])
-        r.ltrim("historial_bolita", 0, 500) # Límite para no llenar los 30MB
+        r.ltrim("historial_bolita", 0, 500)
 
-    # 3. Analizar patrones
     rastro = buscar_rastro(datos['p'])
     objetivo = "NOCHE" if datos['t'] == "M" else "MEDIODÍA de mañana"
-    desc_fijo = LISTA_CHARADA.get(datos['f'], "Sin descripción")
+    desc_fijo = LISTA_CHARADA.get(datos['f'], "Sin descripción en charada.py")
 
-    # Aquí es donde verás el resultado en pantalla
     return jsonify({
         "estatus": "SISTEMA ONLINE",
-        "pizarra_hoy": datos['p'],
-        "fijo_actual": f"{datos['f']} ({desc_fijo})",
-        "objetivo_pronostico": objetivo,
+        "pizarra_actual": datos['p'],
+        "fijo_hoy": f"{datos['f']} ({desc_fijo})",
+        "pronostico_para": objetivo,
         "rastro_historico": rastro,
-        "mensaje": f"Analizando qué salió después de combinaciones similares a {datos['f']}..."
+        "analisis": f"Basado en {datos['p']}, el historial sugiere vigilar: {rastro}"
     })
 
 if __name__ == "__main__":
-    # Render usa la variable de entorno PORT
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
