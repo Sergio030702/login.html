@@ -27,21 +27,19 @@ OUTPUT: Professional, data-driven, percentage-based forecasting, and stripped of
 """
 
 # ==============================================================================
-# MOTOR BI v9.1 - ELIMINACIÓN DE N/A Y FILTRADO PORCENTUAL
+# MOTOR BI v9.2 - ANÁLISIS PORCENTUAL Y COMPETENCIA
 # ==============================================================================
 def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
     historial = r.lrange("historial_bolita", 0, -1)
     if not historial:
         return "❌ ERROR_DB: No hay datos en Redis."
 
-    # Importar tu archivo de datos
     try:
         import charada_data
         lista_completa = charada_data.LISTA_CHARADA
     except:
         lista_completa = {}
 
-    # --- 1. RASTRO BIDIRECCIONAL ---
     adelante = [] 
     atras = []
     for i in range(len(historial)):
@@ -49,17 +47,14 @@ def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
             if i > 0: adelante.append(historial[i-1].split('-')[0][-2:])
             if i < len(historial) - 1: atras.append(historial[i+1].split('-')[0][-2:])
     
-    # --- 2. ANALIZADOR DE VÍNCULOS POR ARCHIVO ---
     def tiene_relacion_en_archivo(n_analizar):
         sig_n = lista_completa.get(n_analizar, "").lower()
         if not significado_fijo or not sig_n: return False
-        palabras_anchor = set(re.findall(r'\w+', significado_fijo.lower()))
-        palabras_target = set(re.findall(r'\w+', sig_n))
-        # Si comparten alguna palabra de más de 3 letras (para evitar "de", "el", "la")
-        comunes = [p for p in palabras_anchor.intersection(palabras_target) if len(p) > 3]
+        p_anchor = set(re.findall(r'\w+', significado_fijo.lower()))
+        p_target = set(re.findall(r'\w+', sig_n))
+        comunes = [p for p in p_anchor.intersection(p_target) if len(p) > 3]
         return len(comunes) > 0
 
-    # --- 3. LÓGICA DE CORRIDOS ---
     partes = pizarra.split('-')
     corridos = [partes[1], partes[2]] if len(partes) > 2 else []
     
@@ -69,65 +64,55 @@ def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
     def procesar_candidatos(lista_nums, motivo, peso_base):
         for i, n in enumerate(lista_nums):
             if n.isdigit() and len(n) == 2 and n not in vistos:
-                # CÁLCULO INICIAL
                 frec = Counter(adelante + atras).get(n, 0)
                 ajuste_pos = (len(lista_nums) - i) * 1.5
                 prob = peso_base + (frec * 6) + ajuste_pos
-                
                 info = motivo
-                # BONO SEMÁNTICO (TU ARCHIVO)
                 if tiene_relacion_en_archivo(n):
                     prob += 15
                     info += " + Vínculo Charada"
-                
-                # BONO POR CORRIDO
                 if n in corridos:
                     prob += 8
                     info += " | Simetría"
-
                 prob = min(prob, 98.9)
                 candidatos.append({"num": n, "prob": prob, "pq": info})
                 vistos.add(n)
 
-    # Llenar la lista de candidatos por capas
     procesar_candidatos(list(set(adelante) & set(atras)), "Rastro Doble", 70)
     procesar_candidatos(adelante, "Patrón T+1", 60)
     procesar_candidatos(corridos, "Efecto Corrido", 55)
     procesar_candidatos(atras, "Origen T-1", 45)
 
-    # Rellenar con Jales si faltan
     while len(candidatos) < 5:
         n_jale = str((int(fijo) + 25 + len(candidatos)) % 100).zfill(2)
         procesar_candidatos([n_jale], "Jale Matemático", 30)
 
-    # --- ORDENAR POR PORCENTAJE (EL QUE MÁS TENGA VA PRIMERO) ---
     candidatos = sorted(candidatos, key=lambda x: x['prob'], reverse=True)
     pool_final = candidatos[:5]
 
-    # --- REPORTE FINAL ---
     lineas = ""
     for it in pool_final:
         lineas += f"🔥 **{it['num']}** → **{round(it['prob'], 1)}%**\n   └─ *{it['pq']}*\n"
 
     return (
-        f"🇨🇺 **BOLITA IA MASTER v9.1**\n"
+        f"🇨🇺 **BOLITA IA MASTER v9.2**\n"
         f"**PIZARRA:** {pizarra} | **ANCHOR:** {fijo} ({significado_fijo})\n"
         f"--------------------------------------------------\n"
-        f"🧠 **ENGINEERING AUDIT (FULL PROMPT):**\n"
-        f"● **Sampling:** {len(historial)} registros analizados.\n"
-        f"● **Logic:** Competencia de filtros por peso porcentual.\n\n"
         f"🎯 **PRONÓSTICO Y ARGUMENTACIÓN TÉCNICA:**\n"
         f"{lineas}\n"
-        f"📌 **ANALYSIS SUMMARY:**\n"
-        f"El motor ha priorizado al **{pool_final[0]['num']}** tras superar los filtros de "
-        f"rastro, simetría y convergencia semántica con un {round(pool_final[0]['prob'], 1)}%.\n"
         f"--------------------------------------------------"
     )
+
+# --- RUTAS DE LA APLICACIÓN ---
+
+@app.route('/')
+def index():
+    # ESTA ES LA RUTA QUE FALTABA PARA QUE NO TE SALGA "NOT FOUND"
+    return render_template('index.html')
 
 @app.route('/api/predecir')
 def predecir():
     try:
-        # SCRAPER
         res = requests.get("https://www.lotteryusa.com/florida/", timeout=5, headers={'User-Agent': 'Mozilla/5.0'})
         b = re.findall(r'result-ball">(\d)', res.text)
         if len(b) >= 9:
@@ -137,7 +122,6 @@ def predecir():
             p = r.lindex("historial_bolita", 0)
             f = p.split('-')[0][-2:]
 
-        # Asegurar significado del Anchor desde charada_data.py
         try:
             import charada_data
             sig = charada_data.LISTA_CHARADA.get(f, "N/A")
