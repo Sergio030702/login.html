@@ -27,12 +27,12 @@ OUTPUT: Professional, data-driven, percentage-based forecasting, and stripped of
 """
 
 # ==============================================================================
-# MOTOR BI v9.2 - ANÁLISIS PORCENTUAL Y COMPETENCIA
+# MOTOR BI v9.3 - ANÁLISIS PORCENTUAL
 # ==============================================================================
 def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
     historial = r.lrange("historial_bolita", 0, -1)
     if not historial:
-        return "❌ ERROR_DB: No hay datos en Redis."
+        return "❌ ERROR_DB: Historial vacío. Agregue datos."
 
     try:
         import charada_data
@@ -40,8 +40,7 @@ def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
     except:
         lista_completa = {}
 
-    adelante = [] 
-    atras = []
+    adelante, atras = [], []
     for i in range(len(historial)):
         if fijo in historial[i]:
             if i > 0: adelante.append(historial[i-1].split('-')[0][-2:])
@@ -58,8 +57,7 @@ def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
     partes = pizarra.split('-')
     corridos = [partes[1], partes[2]] if len(partes) > 2 else []
     
-    candidatos = []
-    vistos = set()
+    candidatos, vistos = [], set()
 
     def procesar_candidatos(lista_nums, motivo, peso_base):
         for i, n in enumerate(lista_nums):
@@ -95,7 +93,7 @@ def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
         lineas += f"🔥 **{it['num']}** → **{round(it['prob'], 1)}%**\n   └─ *{it['pq']}*\n"
 
     return (
-        f"🇨🇺 **BOLITA IA MASTER v9.2**\n"
+        f"🇨🇺 **BOLITA IA MASTER v9.3**\n"
         f"**PIZARRA:** {pizarra} | **ANCHOR:** {fijo} ({significado_fijo})\n"
         f"--------------------------------------------------\n"
         f"🎯 **PRONÓSTICO Y ARGUMENTACIÓN TÉCNICA:**\n"
@@ -103,33 +101,47 @@ def motor_bi_maestro_final(pizarra, fijo, significado_fijo):
         f"--------------------------------------------------"
     )
 
-# --- RUTAS DE LA APLICACIÓN ---
+# --- RUTAS ---
 
 @app.route('/')
 def index():
-    # ESTA ES LA RUTA QUE FALTABA PARA QUE NO TE SALGA "NOT FOUND"
     return render_template('index.html')
 
 @app.route('/api/predecir')
 def predecir():
     try:
+        # 1. SCRAPER: Leer la página
         res = requests.get("https://www.lotteryusa.com/florida/", timeout=5, headers={'User-Agent': 'Mozilla/5.0'})
-        b = re.findall(r'result-ball">(\d)', res.text)
+        b = re.findall(r'result-ball">(\d+)', res.text)
+        
+        p, f = None, None
+        
         if len(b) >= 9:
+            # Formato esperado: 088-95-56
             p = f"{b[1]}{b[2]}{b[3]}-{b[4]}{b[5]}-{b[7]}{b[8]}"
             f = f"{b[2]}{b[3]}"
+            
+            # --- ¡AQUÍ ESTÁ EL ARREGLO! GUARDAR SI ES NUEVO ---
+            ultimo_en_db = r.lindex("historial_bolita", 0)
+            if p != ultimo_en_db:
+                r.lpush("historial_bolita", p)
+                r.ltrim("historial_bolita", 0, 1000) # Mantener historial fresco
         else:
-            p = r.lindex("historial_bolita", 0)
+            # Si el scraper no lee nada nuevo, usa el último de la DB
+            p = r.lindex("historial_bolita", 0) or "000-00-00"
             f = p.split('-')[0][-2:]
 
+        # 2. CARGAR SIGNIFICADO
         try:
             import charada_data
             sig = charada_data.LISTA_CHARADA.get(f, "N/A")
         except:
             sig = "N/A"
 
+        # 3. GENERAR RESPUESTA
         respuesta = motor_bi_maestro_final(p, f, sig)
         return jsonify({"respuesta": respuesta})
+    
     except Exception as e:
         return jsonify({"respuesta": f"❌ CORE_ERROR: {str(e)}"})
 
