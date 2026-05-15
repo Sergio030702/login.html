@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
@@ -10,18 +9,14 @@
     <meta name="keywords" content="girasoles, jardín digital, regalo interactivo, pensamientos, amor, flores digitales">
     <meta name="author" content="Tu Nombre">
 
-    <!-- IMPORTANTE: Esta es la imagen que se verá al compartir el enlace -->
+    <!-- IMAGEN PARA COMPARTIR EN REDES (YA FUNCIONA) -->
     <meta property="og:title" content="🌻 Jardín Eterno de Girasoles">
-    <meta property="og:description" content="💛 Tengo algo especial para ti dentro de este jardín. Cada flor guarda un pensamiento bonito. ¡Descúbrelos todos!">
+    <meta property="og:description" content="💛 Tengo algo especial para ti dentro de este jardín. ¡Cada flor guarda un pensamiento bonito!">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://i.postimg.cc/kXvKj3qW/sunflower-field.jpg">
+    <meta property="og:image" content="https://images.pexels.com/photos/46216/sunflower-flowers-yellow-blooming-46216.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Campo de girasoles brillantes - Jardín Eterno">
-
-    <!-- Para Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://i.postimg.cc/kXvKj3qW/sunflower-field.jpg">
+    <meta property="og:url" content="https://tu-dominio.vercel.app">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌻</text></svg>">
 
@@ -63,17 +58,38 @@
             padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,219,58,0.2); backdrop-filter: blur(5px);
         }
 
+        /* ARREGLO: Girasoles más grandes y responsivos */
         .sunflower {
-            position: absolute; width: 100px; height: 100px;
-            cursor: pointer; transition: transform 0.3s ease-out, opacity 0.4s;
-            transform-style: preserve-3d; z-index: 10;
+            position: absolute;
+            width: min(130px, 20vw);
+            height: min(130px, 20vw);
+            cursor: pointer;
+            transition: transform 0.3s ease-out, opacity 0.4s;
+            transform-style: preserve-3d;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .sunflower {
+                width: 100px;
+                height: 100px;
+            }
         }
 
         .sunflower-inner { width: 100%; height: 100%; animation: flotar 4s ease-in-out infinite; }
 
         .golden-sunflower {
-            z-index: 20; filter: drop-shadow(0 0 25px var(--oro));
+            z-index: 20;
+            filter: drop-shadow(0 0 25px var(--oro));
             animation: emergenciaDorada 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+        }
+        
+        .golden-sunflower .sunflower-inner {
+            width: min(180px, 30vw);
+            height: min(180px, 30vw);
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
         }
         
         @keyframes emergenciaDorada {
@@ -82,7 +98,7 @@
         }
 
         .ring {
-            position: absolute; width: 90px; height: 90px;
+            position: absolute; width: 90%; height: 90%;
             border: 2px solid var(--amarillo); border-radius: 50%;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
             box-shadow: 0 0 10px var(--amarillo); z-index: 2;
@@ -92,19 +108,20 @@
             position: absolute; top: 50%; left: 50%;
             background: linear-gradient(to top, var(--naranja), var(--amarillo));
             border-radius: 50% 50% 20% 20%;
-            transform-origin: bottom center; width: 12px; height: 42px;
-            margin-left: -6px; margin-top: -42px;
+            transform-origin: bottom center;
+            width: 12%; height: 42%;
+            margin-left: -6%; margin-top: -42%;
             transition: transform 0.6s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.6s;
         }
 
         .center {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 38px; height: 38px; background: radial-gradient(circle, #3d1a00, #1a0d00);
+            width: 38%; height: 38%; background: radial-gradient(circle, #3d1a00, #1a0d00);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
             z-index: 5; box-shadow: inset 0 0 10px #000;
         }
 
-        .heart { color: var(--rosa); font-size: 14px; animation: latido 1s infinite; }
+        .heart { color: var(--rosa); font-size: 35%; animation: latido 1s infinite; }
 
         #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
