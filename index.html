@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Jardín Eterno de Girasoles 🌻</title>
+    <meta name="description" content="Un jardín digital interactivo lleno de girasoles y pensamientos especiales. Recoge cada flor para descubrir un mensaje.">
+    <meta name="keywords" content="girasoles, jardín digital, regalo interactivo, pensamientos, amor, flores digitales">
+    <meta name="author" content="Tu Nombre">
+
+    <meta property="og:title" content="Jardín Eterno 💜">
+    <meta property="og:description" content="Tengo algo especial para ti en este jardín. ¿Me ayudas a recoger las flores?">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://fonts.gstatic.com/s/i/short-term/release/googlestars/sunflower/default/32px.svg">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌻</text></svg>">
+
+    <style>
+        :root {
+            --morado: #1a0026;
+            --amarillo: #ffdb3a;
+            --naranja: #e67e00;
+            --rosa: #ff69b4;
+            --oro: #fff700;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none; user-select: none; outline: none;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background: linear-gradient(-45deg, #1a0026, #2e0046, #1a0026);
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+            height: 100vh; width: 100vw; overflow: hidden; font-family: 'Georgia', serif; touch-action: none;
+        }
+
+        @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+
+        #trail-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 5; }
+
+        #stars-container {
+            position: absolute; width: 130%; height: 130%; top: -15%; left: -15%;
+            transition: transform 0.1s ease-out; pointer-events: none;
+        }
+
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: blink 3s infinite; }
+
+        #contador {
+            position: fixed; top: 20px; left: 20px; color: var(--amarillo); font-family: sans-serif;
+            font-size: 0.9rem; z-index: 50; background: rgba(0,0,0,0.4);
+            padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,219,58,0.2); backdrop-filter: blur(5px);
+        }
+
+        .sunflower {
+            position: absolute; width: 100px; height: 100px;
+            cursor: pointer; transition: transform 0.3s ease-out, opacity 0.4s;
+            transform-style: preserve-3d; z-index: 10;
+        }
+
+        .sunflower-inner { width: 100%; height: 100%; animation: flotar 4s ease-in-out infinite; }
+
+        .golden-sunflower {
+            z-index: 20; filter: drop-shadow(0 0 25px var(--oro));
+            animation: emergenciaDorada 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+        }
+        
+        @keyframes emergenciaDorada {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1.8) rotate(360deg); opacity: 1; }
+        }
+
+        .ring {
+            position: absolute; width: 90px; height: 90px;
+            border: 2px solid var(--amarillo); border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--amarillo); z-index: 2;
+        }
+
+        .petal {
+            position: absolute; top: 50%; left: 50%;
+            background: linear-gradient(to top, var(--naranja), var(--amarillo));
+            border-radius: 50% 50% 20% 20%;
+            transform-origin: bottom center; width: 12px; height: 42px;
+            margin-left: -6px; margin-top: -42px;
+            transition: transform 0.6s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.6s;
+        }
+
+        .center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 38px; height: 38px; background: radial-gradient(circle, #3d1a00, #1a0d00);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            z-index: 5; box-shadow: inset 0 0 10px #000;
+        }
+
+        .heart { color: var(--rosa); font-size: 14px; animation: latido 1s infinite; }
+
+        #modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 0, 20, 0.95); display: none;
+            justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2e0046, #1a0026);
+            padding: 40px; border-radius: 30px; border: 2px solid var(--amarillo);
+            text-align: center; color: white; max-width: 80%;
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-content.show { transform: scale(1); }
+
+        .fav-btn {
+            margin-top: 15px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--amarillo); color: white;
+            padding: 12px 20px; border-radius: 30px; cursor: pointer;
+            font-size: 0.9rem; transition: 0.3s;
+        }
+
+        .fav-btn.selected { background: var(--rosa); border-color: var(--rosa); transform: scale(1.1); }
+
+        #final-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--morado); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 200;
+            color: white; text-align: center;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+    </style>
+</head>
+<body>
+
+    <canvas id="trail-canvas"></canvas>
+    <div id="contador">Pensamientos: <span id="count">0/15</span></div>
+    <div id="stars-container"></div>
+    <div id="garden"></div>
+
+    <div id="modal">
+        <div class="modal-content" id="mContent">
+            <div id="phraseText" style="font-size: 1.2rem; font-style: italic; line-height: 1.6; margin-bottom: 20px;"></div>
+            <button id="btnFav" class="fav-btn" onclick="addToFavorites(event)">Me Gusta ❤️</button>
+            <div style="margin-top:30px; color: var(--amarillo); letter-spacing: 2px; font-size: 0.8rem; cursor: pointer;" onclick="closeModal()">SIGUIENTE ➔</div>
+        </div>
+    </div>
+
+    <div id="final-screen">
+        <h1 style="color: var(--amarillo); font-size: 2.2rem;">¡Jardín Completo! 🌻</h1>
+        <p style="opacity: 0.8; padding: 0 30px; font-size: 1.1rem;">Cada pensamiento que recogiste es para ti.</p>
+        <button onclick="enviarWhatsApp()" style="background-color: #25d366; color: white; padding: 18px 40px; border-radius: 50px; border: none; font-weight: bold; margin-top: 40px; font-size: 1rem; cursor: pointer;">Díselo por WhatsApp 📱</button>
+    </div>
+
+    <script>
+        const miNumero = "56259361"; 
+        const totalGirasoles = 15;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playRomanticTink() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        }
+
+        window.addEventListener('deviceorientation', (event) => {
+            const x = event.beta; const y = event.gamma;
+            if (x !== null && y !== null) {
+                const moveX = y / 2; const moveY = x / 2;
+                document.getElementById('stars-container').style.transform = `translate(${moveX}px, ${moveY}px)`;
+            }
+        });
+
+        const canvas = document.getElementById('trail-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+
+        function handleInteract(x, y) {
+            for(let i=0; i<2; i++) particles.push(new Particle(x, y));
+            const bgMoveX = (x - window.innerWidth/2) / 40;
+            const bgMoveY = (y - window.innerHeight/2) / 40;
+            document.getElementById('stars-container').style.transform = `translate(${-bgMoveX}px, ${-bgMoveY}px)`;
+
+            document.querySelectorAll('.sunflower').forEach(sf => {
+                const rect = sf.getBoundingClientRect();
+                const sfX = rect.left + rect.width / 2;
+                const sfY = rect.top + rect.height / 2;
+                const dist = Math.hypot(x - sfX, y - sfY);
+                if (dist < 180) {
+                    const angle = Math.atan2(y - sfY, x - sfX) * (180 / Math.PI);
+                    sf.style.transform = `translate(${(x - sfX)/10}px, ${(y - sfY)/10}px) rotate(${angle + 90}deg) scale(1.1)`;
+                } else {
+                    sf.style.transform = `rotate(0deg) scale(1)`;
+                }
+            });
+        }
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.color = `rgba(255, 219, 58, 0.8)`;
+            }
+            update() { this.x += this.speedX; this.y += this.speedY; if (this.size > 0.1) this.size -= 0.05; }
+            draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+        }
+
+        window.addEventListener('mousemove', (e) => handleInteract(e.clientX, e.clientY));
+        window.addEventListener('touchmove', (e) => handleInteract(e.touches[0].clientX, e.touches[0].clientY));
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => { p.update(); p.draw(); if(p.size <= 0.1) particles.splice(i, 1); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        let phrases = [
+            "Te amo como se aman ciertas cosas oscuras, entre la sombra y el alma. (Neruda) 💜",
+            "Andábamos sin buscarnos, pero sabiendo que para encontrarnos. (Cortázar) ✨",
+            "Si te quiero es porque sos mi amor, mi cómplice y todo. (Benedetti) 🌻",
+            "En un beso, sabrás todo lo que he callado. (Pablo Neruda) 💋",
+            "Tú eres la respuesta que nunca busqué, pero que siempre necesité. ✨",
+            "Mi táctica es mirarte, aprender como sos, quererte como sos. (Benedetti) 💎",
+            "Ven a dormir conmigo: no haremos el amor, él nos hará a nosotros. (Cortázar) 🌙",
+            "Para mi corazón basta tu pecho, para tu libertad bastan mis alas. (Neruda) 🦋",
+            "Si el girasol busca el sol, mi alma solo sabe buscar tu luz. ☀️",
+            "Te quiero para volvernos locos de risa, ebrios de nada. (Cortázar) 🍷",
+            "Amo tus pies porque anduvieron sobre la tierra hasta encontrarme. (Neruda) 👣",
+            "Tú eres mi momento favorito de todos los días. 💜",
+            "Hay besos que en los labios dejan huellas de un sol frío. (Gabriela Mistral) ❄️",
+            "Tengo el mundo entero en tus manos y el cielo en tu mirada. 🌟",
+            "Usted es la mujer por la que mi corazón late en verso. ✍️"
+        ];
+
+        phrases.sort(() => Math.random() - 0.5);
+        let eliminados = 0;
+        let misFavoritas = [];
+
+        function createSunflower(isLast = false) {
+            const sf = document.createElement('div');
+            sf.className = 'sunflower' + (isLast ? ' golden-sunflower' : '');
+            sf.style.left = isLast ? '50%' : Math.random() * 75 + 10 + 'vw';
+            sf.style.top = isLast ? '50%' : Math.random() * 75 + 10 + 'vh';
+            if(isLast) sf.style.transform = 'translate(-50%, -50%)';
+
+            const numPetals = isLast ? 18 : 12;
+            sf.innerHTML = `
+                <div class="sunflower-inner">
+                    <div class="ring"></div>
+                    ${Array(numPetals).fill('<div class="petal"></div>').join('')}
+                    <div class="center"><div class="heart">♥</div></div>
+                </div>`;
+            
+            const petals = sf.querySelectorAll('.petal');
+            petals.forEach((p, i) => p.style.transform = `rotate(${i * (360/numPetals)}deg)`);
+
+            sf.onclick = (e) => {
+                e.stopPropagation(); playRomanticTink();
+                petals.forEach((p, i) => {
+                    const angle = i * (360/numPetals);
+                    const dist = isLast ? 350 : 200;
+                    p.style.transform = `rotate(${angle}deg) translateY(-${dist}px) scale(0)`;
+                    p.style.opacity = '0';
+                });
+                sf.querySelector('.center').style.transform = 'translate(-50%, -50%) scale(0)';
+                sf.querySelector('.ring').style.opacity = '0';
+
+                setTimeout(() => { 
+                    sf.remove(); eliminados++;
+                    document.getElementById('count').innerText = eliminados + "/" + totalGirasoles;
+                    showModal(); 
+                }, 650);
+            };
+            document.getElementById('garden').appendChild(sf);
+        }
+
+        function showModal() {
+            document.getElementById('phraseText').innerText = phrases[eliminados - 1];
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('btnFav').classList.remove('selected');
+            document.getElementById('btnFav').innerText = "Me Gusta ❤️";
+            setTimeout(() => document.getElementById('mContent').classList.add('show'), 50);
+        }
+
+        function addToFavorites() {
+            const txt = document.getElementById('phraseText').innerText;
+            if(!misFavoritas.includes(txt)) misFavoritas.push(txt);
+            document.getElementById('btnFav').innerText = "¡En tu colección! ✨";
+            document.getElementById('btnFav').classList.add('selected');
+            setTimeout(closeModal, 800);
+        }
+
+        function closeModal() {
+            document.getElementById('mContent').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('modal').style.display = 'none';
+                if (eliminados === totalGirasoles - 1) {
+                    setTimeout(() => createSunflower(true), 500);
+                } else if (eliminados === totalGirasoles) {
+                    document.getElementById('final-screen').style.display = 'flex';
+                }
+            }, 300);
+        }
+
+        function enviarWhatsApp() {
+            let favs = misFavoritas.length > 0 ? "Mis frases favoritas:\n\n" + misFavoritas.map(f => "• " + f).join("\n\n") : "¡Me encantó todo! 💜";
+            window.open(`https://api.whatsapp.com/send?phone=${miNumero}&text=${encodeURIComponent("🌻 ¡He completado tu jardín Eterno!\n\n" + favs)}`, '_blank');
+        }
+
+        for (let i = 0; i < 70; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.width = s.style.height = Math.random() * 2 + 1 + 'px';
+            s.style.left = Math.random() * 100 + '%'; s.style.top = Math.random() * 100 + '%';
+            document.getElementById('stars-container').appendChild(s);
+        }
+        for (let i = 0; i < totalGirasoles - 1; i++) createSunflower(false);
+    </script>
+</body>
+</html>
